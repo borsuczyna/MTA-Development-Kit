@@ -1,50 +1,80 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
-import { ResourceItem } from './resource-item';
+import { ResourceItem } from './item';
 import { DOMParser } from 'xmldom';
-import { ResourceExport } from './resource-export';
+import { ResourceExport } from './export';
+import { ResourceScript } from './script';
+import { FunctionParameter } from './parameter';
 
 export class Resource {
     public name: string;
     public fullPath: string;
     public path: string;
+    public scripts: ResourceScript[] = [];
     public exports: ResourceExport[] = [];
 
     constructor(fullPath: string, path: string) {
         this.fullPath = fullPath;
         this.name = path.split('/').pop() || '';
         this.path = path;
+    }
 
-        this.loadExports();
+    public async load() {
+        await this.loadMeta();
     }
 
     public toResourceItem(): ResourceItem {
         return new ResourceItem(this);
     }
 
-    private loadExports() {
+    private async loadScripts(scriptNodes: HTMLCollectionOf<Element>) {
+        this.scripts = await Promise.all(Array.from(scriptNodes).map(async scriptNode => {
+            const scriptPath = scriptNode.getAttribute('src') || '';
+            const scriptType = scriptNode.getAttribute('type') || 'shared';
+            const fullPath = `${this.fullPath}/${scriptPath}`;
+            const path = `${this.path}/${scriptPath}`;
+
+            const script = new ResourceScript(this, fullPath, path, scriptType);
+            await script.load();
+
+            return script;
+        }));
+    }
+
+    private loadExports(exportsNodes: HTMLCollectionOf<Element>) {
+        this.exports = Array.from(exportsNodes).map(exportNode => {
+            const functionName = exportNode.getAttribute('function') || '';
+            const returnValue = FunctionParameter.parse(exportNode.getAttribute('retval') ?? '');
+            const parameters = (exportNode.getAttribute('params') || '').split(',').map(param => FunctionParameter.parse(param));
+            const description = exportNode.getAttribute('description') || null;
+            const type = exportNode.getAttribute('type') || 'shared';
+
+            return new ResourceExport(this, functionName, returnValue, parameters, description, type);
+        });
+    }
+
+    private async loadMeta() {
         const metaPath = `${this.fullPath}/meta.xml`;
         if (!fs.existsSync(metaPath)) {
             return;
         }
 
-        const meta = fs.readFileSync(metaPath, 'utf8');
-        const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(meta, 'text/xml');
-        const exports = xmlDoc.getElementsByTagName('export');
+        try {
+            const meta = await fs.promises.readFile(metaPath, 'utf8');
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(meta, 'text/xml');
+            const exports = xmlDoc.getElementsByTagName('export');
+            const scripts = xmlDoc.getElementsByTagName('script');
 
-        this.exports = Array.from(exports).map(exportElement => {
-            const functionName = exportElement.getAttribute('function') || '';
-            const returnType = exportElement.getAttribute('retval') || null;
-            const parameters = (exportElement.getAttribute('params') || '').split(',').map(param => param.trim());
-            const description = exportElement.getAttribute('description') || null;
-            const type = exportElement.getAttribute('type') || 'shared';
-
-            return new ResourceExport(this, functionName, returnType, parameters, description, type);
-        });
+            this.loadScripts(scripts);
+            this.loadExports(exports);
+        } catch (error) {
+            const errorMessage = (error as Error).message;
+            vscode.window.showErrorMessage(`Error loading meta.xml: ${errorMessage}`);
+        }
     }
 
-    public static getResources(): Resource[] {
+    public static async getResources(): Promise<Resource[]> {
         const workspaceFolders = vscode.workspace.workspaceFolders;
         if (!workspaceFolders) {
             return [];
@@ -52,10 +82,23 @@ export class Resource {
 
         const rootPath = workspaceFolders[0].uri.fsPath;
         try {
-            const directories = fs.readdirSync(rootPath, { withFileTypes: true })
-                .filter(dirEntry => dirEntry.isDirectory())
-                .filter(dirEntry => fs.existsSync(`${rootPath}/${dirEntry.name}/meta.xml`))
-                .map(directory => new Resource(`${rootPath}/${directory.name}`, directory.name));
+            const dirEntries = await fs.promises.readdir(rootPath, { withFileTypes: true });
+            const directories = [];
+
+            for (const dirEntry of dirEntries) {
+                if (!dirEntry.isDirectory()) {
+                    continue;
+                }
+
+                const metaPath = `${rootPath}/${dirEntry.name}/meta.xml`;
+                if (!fs.existsSync(metaPath)) {
+                    continue;
+                }
+
+                const resource = new Resource(`${rootPath}/${dirEntry.name}`, dirEntry.name);
+                await resource.load();
+                directories.push(resource);
+            }
             
             return directories;
         } catch (error) {
@@ -65,8 +108,8 @@ export class Resource {
         }
     }
 
-    public static getResourceItems(): ResourceItem[] {
-        const resources = Resource.getResources();
+    public static async getResourceItems(): Promise<ResourceItem[]> {
+        const resources = await Resource.getResources();
         return resources.map(resource => new ResourceItem(resource));
     }
 }

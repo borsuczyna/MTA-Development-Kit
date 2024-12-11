@@ -1,15 +1,30 @@
-import { Resource } from "./resource";
 import * as vscode from 'vscode';
+import { firstLetterUppercase } from "../utils/firstLetterUppercase";
+import { Resource } from "./resource";
+import { FunctionParameter } from './parameter';
+
+export class ExportsSide extends vscode.TreeItem {
+    children?: vscode.TreeItem[];
+
+    constructor(type: string, exports: ResourceExport[]) {
+        super(
+            `${firstLetterUppercase(type.trim())} (${exports.length} exports)`,
+            vscode.TreeItemCollapsibleState.Collapsed
+        );
+
+        this.children = exports.map(exportItem => exportItem.toTreeItem());
+    }
+}
 
 export class ResourceExport {
     public parent: Resource;
     public functionName: string;
-    public returnType: string | null;
-    public parameters: string[];
+    public returnType: FunctionParameter;
+    public parameters: FunctionParameter[];
     public description: string | null;
     public type: string;
 
-    constructor(parent: Resource, functionName: string, returnType: string | null, parameters: string[], description: string | null, type: string = 'shared') {
+    constructor(parent: Resource, functionName: string, returnType: FunctionParameter, parameters: FunctionParameter[], description: string | null, type: string = 'shared') {
         this.parent = parent;
         this.functionName = functionName;
         this.returnType = returnType;
@@ -19,8 +34,8 @@ export class ResourceExport {
     }
 
     public toTreeItem(): vscode.TreeItem {
-        let returnType = this.returnType ? `${this.returnType} ` : '';
-        let parameters = `(${this.parameters.join(', ')})`;
+        let returnType = this.returnType.type ? `${this.returnType.type} ` : '';
+        let parameters = `(${this.parameters.map(param => param.toString()).join(', ')})`;
         let functionPreview = `${returnType}${this.functionName}${parameters}`;
 
         let treeItem = new vscode.TreeItem(
@@ -39,29 +54,25 @@ export class ResourceExport {
     }
 
     public static registerCommands(context: vscode.ExtensionContext): vscode.Disposable {
-        return vscode.commands.registerCommand('extension.useExport', (resourceName: string, functionName: string, returnType: string, parameters: string[]) => {
-            // get current editor
+        return vscode.commands.registerCommand('extension.useExport', (resourceName: string, functionName: string, returnType: FunctionParameter, parameters: FunctionParameter[]) => {
             let editor = vscode.window.activeTextEditor;
             if (!editor) {
                 return;
             }
         
-            // get current selection
             let selection = editor.selection;
-        
-            // insert snippet
             let snippetString = new vscode.SnippetString();
-    
-            if (returnType && returnType !== 'void') {
+
+            if (returnType.type && returnType.type !== 'void') {
                 snippetString.appendText('local ');
-                snippetString.appendPlaceholder('result');
+                snippetString.appendPlaceholder(returnType.shortString());
                 snippetString.appendText(' = ');
             }
     
             snippetString.appendText(`exports['${resourceName}']:${functionName}(`);
     
             parameters.forEach((param, index) => {
-                snippetString.appendPlaceholder(param);
+                snippetString.appendPlaceholder(param.toString());
                 if (index < parameters.length - 1) {
                     snippetString.appendText(', ');
                 }

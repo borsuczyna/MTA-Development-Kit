@@ -57,6 +57,8 @@
         "webpack-cli": "^5.1.4"
     },
     "dependencies": {
+        "@types/luaparse": "^0.2.12",
+        "luaparse": "^0.3.1",
         "xmldom": "^0.6.0"
     }
 }

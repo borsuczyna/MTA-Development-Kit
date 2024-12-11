@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { ResourceItem } from './resource-item';
+import { ResourceItem } from './item';
 import { Resource } from './resource';
 
 export class ResourceTreeProvider {
@@ -14,9 +14,9 @@ export class ResourceTreeProvider {
 		return element;
 	}
 
-	getChildren(element?: ResourceItem): ResourceItem[] {
+	async getChildren(element?: ResourceItem): Promise<ResourceItem[]> {
 		if (!element) {
-			let items = Resource.getResourceItems();
+			let items = await Resource.getResourceItems();
             if (items.length === 0) {
                 return [new vscode.TreeItem('No resources found')];
             }
