@@ -1,19 +1,47 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import { ResourceItem } from './resource-item';
+import { DOMParser } from 'xmldom';
+import { ResourceExport } from './resource-export';
 
-export class Resource
-{
+export class Resource {
     public name: string;
+    public fullPath: string;
     public path: string;
+    public exports: ResourceExport[] = [];
 
-    constructor(path: string) {
+    constructor(fullPath: string, path: string) {
+        this.fullPath = fullPath;
         this.name = path.split('/').pop() || '';
         this.path = path;
+
+        this.loadExports();
     }
 
     public toResourceItem(): ResourceItem {
         return new ResourceItem(this);
+    }
+
+    private loadExports() {
+        const metaPath = `${this.fullPath}/meta.xml`;
+        if (!fs.existsSync(metaPath)) {
+            console.error(`Meta file not found: ${metaPath}`);
+            return;
+        }
+
+        const meta = fs.readFileSync(metaPath, 'utf8');
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(meta, 'text/xml');
+        const exports = xmlDoc.getElementsByTagName('export');
+
+        this.exports = Array.from(exports).map(exportElement => {
+            const functionName = exportElement.getAttribute('function') || '';
+            const returnType = exportElement.getAttribute('retval') || null;
+            const parameters = (exportElement.getAttribute('params') || '').split(',');
+            const description = exportElement.getAttribute('description') || null;
+
+            return new ResourceExport(this, functionName, returnType, parameters, description);
+        });
     }
 
     public static getResources(): Resource[] {
@@ -26,7 +54,8 @@ export class Resource
         try {
             const directories = fs.readdirSync(rootPath, { withFileTypes: true })
                 .filter(dirEntry => dirEntry.isDirectory())
-                .map(directory => new Resource(directory.name));
+                .filter(dirEntry => fs.existsSync(`${rootPath}/${dirEntry.name}/meta.xml`))
+                .map(directory => new Resource(`${rootPath}/${directory.name}`, directory.name));
             
             return directories;
         } catch (error) {

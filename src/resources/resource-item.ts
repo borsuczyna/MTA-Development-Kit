@@ -9,5 +9,8 @@ export class ResourceItem extends vscode.TreeItem {
             resource.name,
             vscode.TreeItemCollapsibleState.Collapsed
         );
+
+        this.children = resource.exports.map(exportItem => exportItem.toTreeItem());
+        this.tooltip = `Resource ${resource.name} (${resource.exports.length} exports)`;
     }
 }

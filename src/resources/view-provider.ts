@@ -16,7 +16,12 @@ export class ResourceTreeProvider {
 
 	getChildren(element?: ResourceItem): ResourceItem[] {
 		if (!element) {
-			return Resource.getResourceItems();
+			let items = Resource.getResourceItems();
+            if (items.length === 0) {
+                return [new vscode.TreeItem('No resources found')];
+            }
+
+            return items;
 		}
 		
 		return element.children || [];
