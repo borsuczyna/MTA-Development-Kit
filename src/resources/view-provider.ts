@@ -20,7 +20,7 @@ export class ResourceTreeProvider {
 			ResourceTreeProvider._resources = await Resource.getResources();
 			let items = await Resource.getResourceItems(ResourceTreeProvider._resources, true);
             if (items.length === 0) {
-                return [new vscode.TreeItem('No resources found')];
+                return [new vscode.TreeItem('No exports found')];
             }
 
             return items;
