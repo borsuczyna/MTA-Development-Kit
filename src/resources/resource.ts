@@ -1,10 +1,13 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
-import { ResourceItem } from './item';
+import { ResourceItem } from './resource-item';
 import { DOMParser } from 'xmldom';
 import { ResourceExport } from './export';
 import { ResourceScript } from './script';
 import { FunctionParameter } from './parameter';
+import { ResourceFunction } from './function';
+import { ResourceTreeProvider } from './view-provider';
+import { pathCompare } from '../utils/pathCompare';
 
 export class Resource {
     public name: string;
@@ -25,6 +28,19 @@ export class Resource {
 
     public toResourceItem(): ResourceItem {
         return new ResourceItem(this);
+    }
+
+    public getFunction(name: string, type: string | null): ResourceFunction | null {
+        let possibleScripts = (type && type !== 'shared') ? this.scripts.filter(script => script.type === type) : this.scripts;
+
+        for (const script of possibleScripts) {
+            let functionItem = script.getFunction(name);
+            if (functionItem) {
+                return functionItem;
+            }
+        }
+
+        return null;
     }
 
     private async loadScripts(scriptNodes: HTMLCollectionOf<Element>) {
@@ -49,7 +65,22 @@ export class Resource {
             const description = exportNode.getAttribute('description') || null;
             const type = exportNode.getAttribute('type') || 'shared';
 
-            return new ResourceExport(this, functionName, returnValue, parameters, description, type);
+            // find possible function
+            const possibleFunction = this.getFunction(functionName, type);
+            if (possibleFunction) {
+                FunctionParameter.sync(parameters, possibleFunction.parameters);
+            }
+
+            const resourceExport = new ResourceExport(this, functionName, returnValue, parameters, description, type);
+
+            if (possibleFunction) {
+                resourceExport.path = possibleFunction.parent.path;
+                resourceExport.fullPath = possibleFunction.parent.fullPath;
+                resourceExport.startLine = possibleFunction.startLine;
+                resourceExport.endLine = possibleFunction.endLine;
+            }
+
+            return resourceExport;
         });
     }
 
@@ -66,7 +97,7 @@ export class Resource {
             const exports = xmlDoc.getElementsByTagName('export');
             const scripts = xmlDoc.getElementsByTagName('script');
 
-            this.loadScripts(scripts);
+            await this.loadScripts(scripts);
             this.loadExports(exports);
         } catch (error) {
             const errorMessage = (error as Error).message;
@@ -108,8 +139,33 @@ export class Resource {
         }
     }
 
-    public static async getResourceItems(): Promise<ResourceItem[]> {
-        const resources = await Resource.getResources();
+    public static async getResourceItems(resources: Resource[], onlyWithExports: boolean = false): Promise<ResourceItem[]> {
+        if (onlyWithExports) {
+            return resources
+                .filter(resource => resource.exports.length > 0)
+                .map(resource => new ResourceItem(resource));
+        }
+        
         return resources.map(resource => new ResourceItem(resource));
+    }
+
+    public static getActiveScript(): ResourceScript | null {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            return null;
+        }
+
+        const fullPath = editor.document.fileName;
+        const resources = ResourceTreeProvider.getResources();
+
+        for (const resource of resources) {
+            for (const script of resource.scripts) {
+                if (pathCompare(script.fullPath, fullPath)) {
+                    return script;
+                }
+            }
+        }
+
+        return null;
     }
 }

@@ -2,6 +2,8 @@ import * as vscode from 'vscode';
 import { firstLetterUppercase } from "../utils/firstLetterUppercase";
 import { Resource } from "./resource";
 import { FunctionParameter } from './parameter';
+import { ResourceExportItem } from './export-item';
+import { highlightCode } from '../utils/highlight';
 
 export class ExportsSide extends vscode.TreeItem {
     children?: vscode.TreeItem[];
@@ -23,6 +25,10 @@ export class ResourceExport {
     public parameters: FunctionParameter[];
     public description: string | null;
     public type: string;
+    public path: string | null = null;
+    public fullPath: string | null = null;
+    public startLine: number | null = null;
+    public endLine: number | null = null;
 
     constructor(parent: Resource, functionName: string, returnType: FunctionParameter, parameters: FunctionParameter[], description: string | null, type: string = 'shared') {
         this.parent = parent;
@@ -33,53 +39,58 @@ export class ResourceExport {
         this.type = type;
     }
 
-    public toTreeItem(): vscode.TreeItem {
-        let returnType = this.returnType.type ? `${this.returnType.type} ` : '';
-        let parameters = `(${this.parameters.map(param => param.toString()).join(', ')})`;
-        let functionPreview = `${returnType}${this.functionName}${parameters}`;
-
-        let treeItem = new vscode.TreeItem(
-            functionPreview,
-            vscode.TreeItemCollapsibleState.None,
-        );
-
-        treeItem.tooltip = this.description || '';
-        treeItem.command = {
-            title: 'Show Description',
-            command: 'extension.useExport',
-            arguments: [this.parent.name, this.functionName, this.returnType, this.parameters],
-        };
-
-        return treeItem;
+    public toTreeItem(): ResourceExportItem {
+        return new ResourceExportItem(this);
     }
 
-    public static registerCommands(context: vscode.ExtensionContext): vscode.Disposable {
-        return vscode.commands.registerCommand('extension.useExport', (resourceName: string, functionName: string, returnType: FunctionParameter, parameters: FunctionParameter[]) => {
-            let editor = vscode.window.activeTextEditor;
-            if (!editor) {
-                return;
-            }
-        
-            let selection = editor.selection;
-            let snippetString = new vscode.SnippetString();
+    private static useExport(resourceName: string, functionName: string, returnType: FunctionParameter, parameters: FunctionParameter[]) {
+        console.log('Use export', resourceName, functionName, returnType, parameters);
+        let editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            return;
+        }
+    
+        let selection = editor.selection;
+        let snippetString = new vscode.SnippetString();
 
-            if (returnType.type && returnType.type !== 'void') {
-                snippetString.appendText('local ');
-                snippetString.appendPlaceholder(returnType.shortString());
-                snippetString.appendText(' = ');
+        if (returnType.type && returnType.type !== 'void') {
+            snippetString.appendText('local ');
+            snippetString.appendPlaceholder(returnType.shortString());
+            snippetString.appendText(' = ');
+        }
+
+        snippetString.appendText(`exports['${resourceName}']:${functionName}(`);
+
+        parameters.forEach((param, index) => {
+            snippetString.appendPlaceholder(param.toString());
+            if (index < parameters.length - 1) {
+                snippetString.appendText(', ');
             }
-    
-            snippetString.appendText(`exports['${resourceName}']:${functionName}(`);
-    
-            parameters.forEach((param, index) => {
-                snippetString.appendPlaceholder(param.toString());
-                if (index < parameters.length - 1) {
-                    snippetString.appendText(', ');
-                }
-            });
-    
-            snippetString.appendText(')');
-            editor.insertSnippet(snippetString, selection);
         });
+
+        snippetString.appendText(')');
+        editor.insertSnippet(snippetString, selection);
+    }
+
+    private static async goToDefinition(treeItem: ResourceExportItem) {
+        if (!treeItem.item.fullPath || !treeItem.item.startLine || !treeItem.item.endLine) {
+            vscode.window.showErrorMessage('Wasn\'t able to find the definition of the export.');
+            return;
+        }
+
+        await highlightCode(treeItem.item.fullPath, treeItem.item.startLine!, treeItem.item.endLine! + 1);
+    }
+
+    private static printActiveScript() {
+        var active = Resource.getActiveScript();
+        console.log(active);
+    }
+
+    public static registerCommands(context: vscode.ExtensionContext): vscode.Disposable[] {
+        return [
+            vscode.commands.registerCommand('extension.useExport', this.useExport),
+            vscode.commands.registerCommand('extension.exportGoToDefinition', this.goToDefinition),
+            vscode.commands.registerCommand('extension.printActiveScript', this.printActiveScript)
+        ];
     }
 }

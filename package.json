@@ -28,7 +28,27 @@
                     "name": "All exports"
                 }
             ]
-        }
+        },
+        "menus": {
+            "view/item/context": [
+                {
+                    "command": "extension.exportGoToDefinition",
+                    "when": "viewItem == export",
+                    "group": "navigation"
+                }
+            ]
+        },
+        "commands": [
+            {
+                "command": "extension.exportGoToDefinition",
+                "title": "Go to definition",
+                "category": "hidden"
+            },
+            {
+                "command": "extension.printActiveScript",
+                "title": "Print active script"
+            }
+        ]
     },
     "scripts": {
         "vscode:prepublish": "npm run package",

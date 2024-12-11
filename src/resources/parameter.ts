@@ -8,7 +8,11 @@ export class FunctionParameter {
     }
     
     public toString(): string {
-        return `${this.type} ${this.name}`;
+        if (this.type.length > 0 && this.type !== 'any') {
+            return `${this.type} ${this.name}`.trim();
+        } else {
+            return this.name;
+        }
     }
 
     public shortString(): string {
@@ -17,6 +21,16 @@ export class FunctionParameter {
         }
 
         return this.type;
+    }
+
+    public static sync(a: FunctionParameter[], b: FunctionParameter[]) {
+        for (let [index, parameter] of b.entries()) {
+            if (a[index]) {
+                a[index].name = parameter.name;
+            } else {
+                a[index] = parameter;
+            }
+        }
     }
 
     public static parse(param: string): FunctionParameter {

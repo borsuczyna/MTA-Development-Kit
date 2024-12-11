@@ -3,7 +3,8 @@ import { ResourceTreeProvider } from './resources/view-provider';
 import { ResourceExport } from './resources/export';
 
 function activate(context: vscode.ExtensionContext) {
-    context.subscriptions.push(ResourceExport.registerCommands(context));
+	let disposables = ResourceExport.registerCommands(context);
+    context.subscriptions.push(...disposables);
 
     const resourceTreeProvider = new ResourceTreeProvider();
     vscode.window.registerTreeDataProvider('exportsView', resourceTreeProvider);

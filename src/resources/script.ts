@@ -10,8 +10,24 @@ export class ResourceScript {
     public fullPath: string;
     public type: string = 'shared';
     public functions: ResourceFunction[] = [];
+    public compiled: boolean = false;
 
     constructor(parent: Resource, fullPath: string, path: string, type: string = 'shared') {
+        if (path.endsWith('.luac') || fullPath.endsWith('.luac')) {
+            if (path.startsWith('compiled/scripts/')) {
+                path = path.replace('compiled/scripts/', '').slice(0, -1);
+                fullPath = fullPath.replace('compiled/scripts/', '').slice(0, -1);
+            } else if (path.startsWith(`${parent.name}/compiled/scripts/`)) {
+                path = path.replace('compiled/scripts/', '').slice(0, -1);
+                fullPath = fullPath.replace('compiled/scripts/', '').slice(0, -1);
+            } else if (fs.existsSync(fullPath.slice(0, -1))) {
+                path = path.slice(0, -1);
+                fullPath = fullPath.slice(0, -1);
+            } else {
+                this.compiled = true;
+            }
+        }
+
         this.parent = parent;
         this.fullPath = fullPath;
         this.path = path;
@@ -19,7 +35,10 @@ export class ResourceScript {
     }
 
     public async load() {
-        console.log('Loading script:', this.fullPath);
+        if (this.compiled) {
+            return;
+        }
+
         this.loadFunctions();
     }
 
@@ -33,10 +52,14 @@ export class ResourceScript {
                 const functionName = node.identifier.name;
                 const parameters = node.parameters.map((param: any) => new FunctionParameter('any', param.name));
 
-                return new ResourceFunction(this, functionName, parameters);
+                return new ResourceFunction(this, functionName, parameters, node.loc.start.line, node.loc.end.line);
             });
         } catch (error) {
             // console.error('Error loading script:', this.fullPath, error);
         }
+    }
+
+    public getFunction(name: string): ResourceFunction | null {
+        return this.functions.find(func => func.functionName === name) || null;
     }
 }
