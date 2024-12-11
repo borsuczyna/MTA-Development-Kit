@@ -1,6 +1,6 @@
 {
-    "name": "mta-steroids",
-    "displayName": "MTA Steroids",
+    "name": "mta-development-kit",
+    "displayName": "MTA Development Kit",
     "description": "Visual Studio Code extension for Multi Theft Auto",
     "version": "0.0.1",
     "engines": {
