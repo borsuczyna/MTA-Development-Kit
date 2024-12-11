@@ -25,7 +25,6 @@ export class Resource {
     private loadExports() {
         const metaPath = `${this.fullPath}/meta.xml`;
         if (!fs.existsSync(metaPath)) {
-            console.error(`Meta file not found: ${metaPath}`);
             return;
         }
 
@@ -37,10 +36,11 @@ export class Resource {
         this.exports = Array.from(exports).map(exportElement => {
             const functionName = exportElement.getAttribute('function') || '';
             const returnType = exportElement.getAttribute('retval') || null;
-            const parameters = (exportElement.getAttribute('params') || '').split(',');
+            const parameters = (exportElement.getAttribute('params') || '').split(',').map(param => param.trim());
             const description = exportElement.getAttribute('description') || null;
+            const type = exportElement.getAttribute('type') || 'shared';
 
-            return new ResourceExport(this, functionName, returnType, parameters, description);
+            return new ResourceExport(this, functionName, returnType, parameters, description, type);
         });
     }
 
