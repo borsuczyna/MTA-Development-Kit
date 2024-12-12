@@ -4,6 +4,7 @@ import { serverSnippets } from './data/server';
 import { sharedSnippets } from './data/shared';
 import { clientSnippets } from './data/client';
 import { ScriptSide } from '../enums/script-side';
+import { Resource } from '../resources/resource';
 
 export class SignatureHelpProvider implements vscode.SignatureHelpProvider {
     private snippets: FunctionSnippet[] = [];
@@ -42,7 +43,17 @@ export class SignatureHelpProvider implements vscode.SignatureHelpProvider {
         }
 
         const functionName = functionCallMatch[0].replace(/\s*\($/, '');
-        const snippet = this.snippets.find(s => s.func.functionName === functionName);
+        let activeScript = Resource.getActiveScriptCached();
+        let snippets = this.snippets;
+            
+        if (activeScript) {
+            let currentScriptSide = activeScript.type;
+            snippets = FunctionSnippet.filterSnippets(snippets, currentScriptSide);
+        } else {
+            snippets = FunctionSnippet.filterSnippets(snippets, ScriptSide.Shared);
+        }
+
+        const snippet = snippets.find(s => s.func.functionName === functionName);
         if (!snippet) {
             return null;
         }
@@ -54,6 +65,8 @@ export class SignatureHelpProvider implements vscode.SignatureHelpProvider {
 
         return signatureHelp;
     }
+
+    
 }
 
 function countCommas(text: string): number {

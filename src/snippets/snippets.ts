@@ -4,6 +4,7 @@ import { ScriptSide } from '../enums/script-side';
 import { clientSnippets } from './data/client';
 import { sharedSnippets } from './data/shared';
 import { serverSnippets } from './data/server';
+import { Resource } from '../resources/resource';
 
 export class SnippetCompletionItemProvider implements vscode.CompletionItemProvider {
     private snippets: FunctionSnippet[] = [];
@@ -22,7 +23,17 @@ export class SnippetCompletionItemProvider implements vscode.CompletionItemProvi
         });
     }
 
-    public provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): vscode.CompletionItem[] {
-        return this.snippets.map(snippet => snippet.completionItem);
+    public async provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): Promise<vscode.CompletionItem[]> {
+        let activeScript = await Resource.getActiveScript();
+        let snippets = this.snippets;
+            
+        if (activeScript) {
+            let currentScriptSide = activeScript.type;
+            snippets = FunctionSnippet.filterSnippets(snippets, currentScriptSide);
+        } else {
+            snippets = FunctionSnippet.filterSnippets(snippets, ScriptSide.Shared);
+        }
+
+        return snippets.map(snippet => snippet.completionItem);
     }
 }

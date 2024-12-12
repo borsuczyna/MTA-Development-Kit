@@ -150,14 +150,34 @@ export class Resource {
         return resources.map(resource => new ResourceItem(resource));
     }
 
-    public static getActiveScript(): ResourceScript | null {
+    public static async getActiveScript(): Promise<ResourceScript | null> {
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
             return null;
         }
 
         const fullPath = editor.document.fileName;
-        const resources = ResourceTreeProvider.getResources();
+        const resources = await ResourceTreeProvider.getResources();
+
+        for (const resource of resources) {
+            for (const script of resource.scripts) {
+                if (pathCompare(script.fullPath, fullPath)) {
+                    return script;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public static getActiveScriptCached(): ResourceScript | null {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            return null;
+        }
+
+        const fullPath = editor.document.fileName;
+        const resources = ResourceTreeProvider.getResourcesCached();
 
         for (const resource of resources) {
             for (const script of resource.scripts) {

@@ -5709,37 +5709,38 @@ export const sharedSnippets: Function[] = [
         "returnValues": [],
         "requiredArguments": [
             {
-                "type": "\"#FF0000Hello",
-                "name": "#00FF00World\"",
-                "default": null
-            },
-            {
-                "type": "root",
-                "name": null,
-                "default": null
-            },
-            {
-                "type": "255",
-                "name": null,
-                "default": null
-            },
-            {
-                "type": "255",
-                "name": null,
-                "default": null
-            },
-            {
-                "type": "255",
-                "name": null,
-                "default": null
-            },
-            {
-                "type": "true",
-                "name": null,
+                "type": "string",
+                "name": "message",
                 "default": null
             }
         ],
-        "optionalArguments": []
+        "optionalArguments": [
+            {
+                "type": "element",
+                "name": "visibleTo",
+                "default": "root"
+            },
+            {
+                "type": "number",
+                "name": "r",
+                "default": "255"
+            },
+            {
+                "type": "number",
+                "name": "g",
+                "default": "255"
+            },
+            {
+                "type": "number",
+                "name": "b",
+                "default": "255"
+            },
+            {
+                "type": "bool",
+                "name": "colorCoded",
+                "default": "false"
+            }
+        ]
     },
     {
         "functionName": "outputConsole",

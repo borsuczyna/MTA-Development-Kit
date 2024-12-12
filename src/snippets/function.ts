@@ -103,4 +103,25 @@ export class FunctionSnippet {
         
         return snippet;
     }
+
+    public static filterSnippets(snippets: FunctionSnippet[], scriptSide: ScriptSide): FunctionSnippet[] {
+        let uniqueSnippets: Map<string, FunctionSnippet> = new Map();
+        let snippetsArray = scriptSide !== ScriptSide.Shared ? snippets.filter(snippet => snippet.scriptSide === scriptSide || snippet.scriptSide === ScriptSide.Shared) : snippets;
+
+        if (scriptSide === ScriptSide.Shared) {
+            for (let snippet of snippetsArray) {
+                if (!uniqueSnippets.has(snippet.func.functionName) || snippet.scriptSide === ScriptSide.Shared) {
+                    uniqueSnippets.set(snippet.func.functionName, snippet);
+                }
+            }
+        } else {
+            for (let snippet of snippetsArray) {
+                if (!uniqueSnippets.has(snippet.func.functionName) || snippet.scriptSide === scriptSide) {
+                    uniqueSnippets.set(snippet.func.functionName, snippet);
+                }
+            }
+        }
+
+        return Array.from(uniqueSnippets.values());
+    }
 }
