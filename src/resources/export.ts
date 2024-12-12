@@ -45,7 +45,6 @@ export class ResourceExport {
     }
 
     private static useExport(resourceName: string, functionName: string, returnType: FunctionParameter, parameters: FunctionParameter[]) {
-        console.log('Use export', resourceName, functionName, returnType, parameters);
         let editor = vscode.window.activeTextEditor;
         if (!editor) {
             return;

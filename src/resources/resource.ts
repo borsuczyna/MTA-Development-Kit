@@ -31,7 +31,7 @@ export class Resource {
         return new ResourceItem(this);
     }
 
-    public getFunction(name: string, type: string | null): ResourceFunction | null {
+    public getFunction(name: string, type: ScriptSide | null): ResourceFunction | null {
         let possibleScripts = (type && type !== ScriptSide.Shared) ? this.scripts.filter(script => script.type === type) : this.scripts;
 
         for (const script of possibleScripts) {
@@ -42,6 +42,10 @@ export class Resource {
         }
 
         return null;
+    }
+
+    public getFunctions(): ResourceFunction[] {
+        return this.scripts.reduce((acc, script) => [...acc, ...script.functions], [] as ResourceFunction[]);
     }
 
     private async loadScripts(scriptNodes: HTMLCollectionOf<Element>) {
@@ -129,6 +133,7 @@ export class Resource {
 
                 const resource = new Resource(`${rootPath}/${dirEntry.name}`, dirEntry.name);
                 await resource.load();
+
                 directories.push(resource);
             }
             

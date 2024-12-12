@@ -41,7 +41,15 @@ export class SignatureHelpProvider implements vscode.SignatureHelpProvider {
         const functionName = functionCallMatch[0].replace(/\s*\($/, '');
         let activeScript = Resource.getActiveScriptCached();
         let snippets = this.snippets;
-            
+
+        // Neighbour script snippets
+        if (activeScript) {
+            let functions = activeScript.parent.getFunctions();
+            let neighbourSnippets = functions.map(func => FunctionSnippet.fromResourceFunction(func));
+            snippets = snippets.concat(neighbourSnippets);
+        }
+
+        // Filter snippets
         if (activeScript) {
             let currentScriptSide = activeScript.type;
             snippets = FunctionSnippet.filterSnippets(snippets, currentScriptSide);

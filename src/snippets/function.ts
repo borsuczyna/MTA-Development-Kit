@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { ScriptSide } from '../enums/script-side';
 import { firstLetterUppercase } from '../utils/firstLetterUppercase';
+import { ResourceFunction } from '../resources/function';
 
 export interface Argument {
     type: string;
@@ -123,5 +124,19 @@ export class FunctionSnippet {
         }
 
         return Array.from(uniqueSnippets.values());
+    }
+
+    public static fromResourceFunction(functionElement: ResourceFunction): FunctionSnippet {
+        return new FunctionSnippet({
+            functionName: functionElement.functionName,
+            description: '',
+            returnValues: [],
+            requiredArguments: functionElement.parameters.map(param => ({
+                type: param.type === 'any' ? '' : param.type,
+                name: param.name,
+                default: null
+            })),
+            optionalArguments: []
+        }, functionElement.parent.type);
     }
 }
