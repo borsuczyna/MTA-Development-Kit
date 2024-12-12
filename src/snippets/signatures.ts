@@ -59,6 +59,10 @@ export class SignatureHelpProvider implements vscode.SignatureHelpProvider {
         signatureHelp.activeSignature = 0;
         signatureHelp.activeParameter = countCommas(textBeforeCursor);
 
+        if (signatureHelp.activeParameter === -1) {
+            return null;
+        }
+
         return signatureHelp;
     }
 }
@@ -74,7 +78,9 @@ function countCommas(text: string): number {
         const char = text[i];
         const nextTwo = text.substring(i, i + 2);
 
-        if (inLongBracket) {
+        if (char === ')' && !inSingleQuote && !inDoubleQuote && !inLongBracket) {
+            return -1;
+        } else if (inLongBracket) {
             // Check for end of long bracket
             if (nextTwo === ']]') {
                 inLongBracket = false;
