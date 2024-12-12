@@ -7,30 +7,16 @@ import { SignatureHelpProvider } from './snippets/signatures';
 function activate(context: vscode.ExtensionContext) {
     let disposables = ResourceExport.registerCommands(context);
     context.subscriptions.push(...disposables);
-
-    // context.subscriptions.push(vscode.languages.registerCompletionItemProvider(
-    //     { language: 'lua' }, // Target language
-    //     {
-    //         provideCompletionItems(document, position, token, context) {
-    //             let def = new vscode.CompletionItem('add', vscode.CompletionItemKind.Function);
-    //             def.detail = "Scriptside: Server";
-    //             def.documentation = new vscode.MarkdownString();
-    //             def.documentation.appendCodeblock('function add(a, b)\n  return a + b\nend', 'lua');
-
-    //             return [def];
-    //         }
-    //     }
-    // ));
-
     context.subscriptions.push(vscode.languages.registerCompletionItemProvider(
-        { language: 'lua' },
+        { language: 'mtalua' },
         new SnippetCompletionItemProvider()
     ));
 
     context.subscriptions.push(vscode.languages.registerSignatureHelpProvider(
-        { language: 'lua' },
+        { language: 'mtalua' },
         new SignatureHelpProvider(),
         '(',
+        ')',
         ',',
         ' '
     ));

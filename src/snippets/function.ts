@@ -29,7 +29,7 @@ export class FunctionSnippet {
         this.completionItem.detail = "Scriptside: " + firstLetterUppercase(this.scriptSide);
 
         this.completionItem.documentation = new vscode.MarkdownString();
-        this.completionItem.documentation.appendCodeblock(this.generateFunctionSnippet(func), 'lua');
+        this.completionItem.documentation.appendCodeblock(this.generateFunctionSnippet(func), 'mtalua');
         this.completionItem.documentation.appendMarkdown(func.description);
 
         this.signature = new vscode.SignatureInformation(

@@ -23,10 +23,6 @@ export class SignatureHelpProvider implements vscode.SignatureHelpProvider {
         });
     }
 
-    public provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): vscode.CompletionItem[] {
-        return this.snippets.map(snippet => snippet.completionItem);
-    }
-
     public provideSignatureHelp(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken, context: vscode.SignatureHelpContext): vscode.ProviderResult<vscode.SignatureHelp> {
         const lineText = document.lineAt(position).text;
         const openingParenIndex = lineText.lastIndexOf('(', position.character);
@@ -65,8 +61,6 @@ export class SignatureHelpProvider implements vscode.SignatureHelpProvider {
 
         return signatureHelp;
     }
-
-    
 }
 
 function countCommas(text: string): number {

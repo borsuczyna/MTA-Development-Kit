@@ -10,7 +10,7 @@
         "Other"
     ],
     "activationEvents": [
-        "onLanguage:plaintext"
+        "*"
     ],
     "main": "./dist/extension.js",
     "contributes": {
@@ -45,6 +45,51 @@
                 "command": "extension.exportGoToDefinition",
                 "title": "Go to definition",
                 "category": "hidden"
+            }
+        ],
+        "languages": [
+            {
+                "id": "mtalua",
+                "aliases": [
+                    "MTA Lua",
+                    "mtalua"
+                ],
+                "extensions": [
+                    ".lua"
+                ],
+                "configuration": "./language-configuration.json"
+            },
+            {
+                "id": "mtaluatypes",
+                "aliases": [],
+                "extensions": [
+                    ".luarioeughiuer"
+                ],
+                "configuration": "./language-configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "mtalua",
+                "scopeName": "source.lua",
+                "path": "./syntaxes/mtalua.tmLanguage.json"
+            },
+            {
+                "language": "mtaluatypes",
+                "scopeName": "source.luatypes",
+                "path": "./syntaxes/mtaluatypes.tmLanguage.json"
+            }
+        ],
+        "themes": [
+            {
+                "label": "Monokai MTA Lua",
+                "uiTheme": "vs-dark",
+                "path": "./themes/Monokai-MTA-Edit.tmTheme"
+            },
+            {
+                "label": "Dark MTA Edit (Visual Studio)",
+                "uiTheme": "vs-dark",
+                "path": "./themes/Dark-MTA-Edit.json"
             }
         ]
     },
