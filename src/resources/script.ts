@@ -3,16 +3,17 @@ import luaparse from 'luaparse';
 import { Resource } from "./resource";
 import { ResourceFunction } from './function';
 import { FunctionParameter } from './parameter';
+import { ScriptSide } from '../enums/script-side';
 
 export class ResourceScript {
     public parent: Resource;
     public path: string;
     public fullPath: string;
-    public type: string = 'shared';
+    public type: ScriptSide = ScriptSide.Shared;
     public functions: ResourceFunction[] = [];
     public compiled: boolean = false;
 
-    constructor(parent: Resource, fullPath: string, path: string, type: string = 'shared') {
+    constructor(parent: Resource, fullPath: string, path: string, type: ScriptSide = ScriptSide.Shared) {
         if (path.endsWith('.luac') || fullPath.endsWith('.luac')) {
             if (path.startsWith('compiled/scripts/')) {
                 path = path.replace('compiled/scripts/', '').slice(0, -1);

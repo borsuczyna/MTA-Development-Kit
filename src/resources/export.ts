@@ -4,6 +4,7 @@ import { Resource } from "./resource";
 import { FunctionParameter } from './parameter';
 import { ResourceExportItem } from './export-item';
 import { highlightCode } from '../utils/highlight';
+import { ScriptSide } from '../enums/script-side';
 
 export class ExportsSide extends vscode.TreeItem {
     children?: vscode.TreeItem[];
@@ -30,7 +31,7 @@ export class ResourceExport {
     public startLine: number | null = null;
     public endLine: number | null = null;
 
-    constructor(parent: Resource, functionName: string, returnType: FunctionParameter, parameters: FunctionParameter[], description: string | null, type: string = 'shared') {
+    constructor(parent: Resource, functionName: string, returnType: FunctionParameter, parameters: FunctionParameter[], description: string | null, type: ScriptSide = ScriptSide.Shared) {
         this.parent = parent;
         this.functionName = functionName;
         this.returnType = returnType;
@@ -81,16 +82,10 @@ export class ResourceExport {
         await highlightCode(treeItem.item.fullPath, treeItem.item.startLine!, treeItem.item.endLine! + 1);
     }
 
-    private static printActiveScript() {
-        var active = Resource.getActiveScript();
-        console.log(active);
-    }
-
     public static registerCommands(context: vscode.ExtensionContext): vscode.Disposable[] {
         return [
             vscode.commands.registerCommand('extension.useExport', this.useExport),
             vscode.commands.registerCommand('extension.exportGoToDefinition', this.goToDefinition),
-            vscode.commands.registerCommand('extension.printActiveScript', this.printActiveScript)
         ];
     }
 }

@@ -8,6 +8,7 @@ import { FunctionParameter } from './parameter';
 import { ResourceFunction } from './function';
 import { ResourceTreeProvider } from './view-provider';
 import { pathCompare } from '../utils/pathCompare';
+import { ScriptSide } from '../enums/script-side';
 
 export class Resource {
     public name: string;
@@ -31,7 +32,7 @@ export class Resource {
     }
 
     public getFunction(name: string, type: string | null): ResourceFunction | null {
-        let possibleScripts = (type && type !== 'shared') ? this.scripts.filter(script => script.type === type) : this.scripts;
+        let possibleScripts = (type && type !== ScriptSide.Shared) ? this.scripts.filter(script => script.type === type) : this.scripts;
 
         for (const script of possibleScripts) {
             let functionItem = script.getFunction(name);
@@ -46,7 +47,7 @@ export class Resource {
     private async loadScripts(scriptNodes: HTMLCollectionOf<Element>) {
         this.scripts = await Promise.all(Array.from(scriptNodes).map(async scriptNode => {
             const scriptPath = scriptNode.getAttribute('src') || '';
-            const scriptType = scriptNode.getAttribute('type') || 'shared';
+            const scriptType = scriptNode.getAttribute('type') as ScriptSide || ScriptSide.Shared;
             const fullPath = `${this.fullPath}/${scriptPath}`;
             const path = `${this.path}/${scriptPath}`;
 
@@ -63,7 +64,7 @@ export class Resource {
             const returnValue = FunctionParameter.parse(exportNode.getAttribute('retval') ?? '');
             const parameters = (exportNode.getAttribute('params') || '').split(',').map(param => FunctionParameter.parse(param));
             const description = exportNode.getAttribute('description') || null;
-            const type = exportNode.getAttribute('type') || 'shared';
+            const type = exportNode.getAttribute('type') as ScriptSide || ScriptSide.Shared;
 
             // find possible function
             const possibleFunction = this.getFunction(functionName, type);
