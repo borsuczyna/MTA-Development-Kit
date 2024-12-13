@@ -10,3 +10,4 @@
 - [ ] Neighbour files global variables
 - [ ] Ctrl + click on function to go to its definition
 - [ ] Ctrl + click on variable to go to its definition
+- [ ] Error lens
