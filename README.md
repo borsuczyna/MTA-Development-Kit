@@ -11,3 +11,5 @@
 - [ ] Ctrl + click on function to go to its definition
 - [ ] Ctrl + click on variable to go to its definition
 - [ ] Error lens
+- [ ] Warnings (for example when source is used as player in trigger)
+- [ ] Trigger snippets
