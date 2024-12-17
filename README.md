@@ -13,5 +13,6 @@
 - [ ] Reading function definition data from comments above the function, e.g. `-- @param name: string`
 - [x] Error lens
 - [ ] Errors for calling unknown function
+- [ ] Errors for using unknown variable
 - [ ] Warnings (for example when source is used as player in trigger)
 - [ ] Trigger snippets
