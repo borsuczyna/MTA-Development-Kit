@@ -7,24 +7,32 @@ import { FunctionDefinitionProvider } from './definitions/function';
 import { ErrorLens } from './error-lens/error-lens';
 
 function activate(context: vscode.ExtensionContext) {
-    let disposables = ResourceExport.registerCommands(context);
-    context.subscriptions.push(...disposables);
+    // Resource export commands
+    context.subscriptions.push(...ResourceExport.registerCommands(context));
+
+    // Snippets
     context.subscriptions.push(vscode.languages.registerCompletionItemProvider(
         { language: 'mtalua' },
         new SnippetCompletionItemProvider()
     ));
 
+    // Signature
     context.subscriptions.push(vscode.languages.registerSignatureHelpProvider(
         { language: 'mtalua' },
         new SignatureHelpProvider(), '(', ')', ',', ' '
     ));
 
+    // Definitions
     context.subscriptions.push(vscode.languages.registerDefinitionProvider(
         { language: 'mtalua' },
         new FunctionDefinitionProvider()
     ));
 
+    // Error lens
     context.subscriptions.push(ErrorLens.activate());
+
+    // Document change
+    context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(SnippetCompletionItemProvider.onActiveFileChange));
 
     const resourceTreeProvider = new ResourceTreeProvider();
     vscode.window.registerTreeDataProvider('exportsView', resourceTreeProvider);

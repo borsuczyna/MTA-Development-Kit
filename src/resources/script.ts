@@ -121,8 +121,6 @@ export class ResourceScript {
         this.nodes = nodes;
         this.errors = errors;
 
-        console.log('errors', this.errors);
-
         let uri = vscode.Uri.file(this.fullPath);
         ErrorLens.setErrors(uri, this.errors.map(error => {
             return {

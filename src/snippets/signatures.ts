@@ -10,10 +10,15 @@ export class SignatureHelpProvider implements vscode.SignatureHelpProvider {
     private snippets: FunctionSnippet[] = [];
     
     constructor() {
-        console.log('Loading signatures...');
+        const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
+        statusBarItem.text = '$(sync~spin) Loading signatures...';
+        statusBarItem.show();
+
         this.loadSnippets(clientSnippets, ScriptSide.Client);
         this.loadSnippets(sharedSnippets, ScriptSide.Shared);
         this.loadSnippets(serverSnippets, ScriptSide.Server);
+
+        statusBarItem.hide();
     }
 
     private loadSnippets(snippets: Function[], scriptSide: ScriptSide) {

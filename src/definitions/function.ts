@@ -13,7 +13,6 @@ export class FunctionDefinitionProvider implements vscode.DefinitionProvider {
             let start = wordRange.start.character - 1;
             let text = document.getText(new vscode.Range(new vscode.Position(0, 0), wordRange.end));
             let lastWord = text.split(/\s+/).map(w => w.trim()).filter(w => w).slice(0, -1).pop();
-            console.log(lastWord);
 
             return new vscode.Location(document.uri, wordRange);
         }

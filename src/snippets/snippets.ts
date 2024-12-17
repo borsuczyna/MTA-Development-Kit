@@ -10,10 +10,15 @@ export class SnippetCompletionItemProvider implements vscode.CompletionItemProvi
     private snippets: FunctionSnippet[] = [];
 
     constructor() {
-        console.log('Loading snippets...');
+        const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
+        statusBarItem.text = '$(sync~spin) Loading snippets...';
+        statusBarItem.show();
+
         this.loadSnippets(clientSnippets, ScriptSide.Client);
         this.loadSnippets(sharedSnippets, ScriptSide.Shared);
         this.loadSnippets(serverSnippets, ScriptSide.Server);
+
+        statusBarItem.hide();
     }
 
     private loadSnippets(snippets: Function[], scriptSide: ScriptSide) {
@@ -47,5 +52,13 @@ export class SnippetCompletionItemProvider implements vscode.CompletionItemProvi
         }
         
         return snippets.map(snippet => snippet.completionItem);
+    }
+
+    public static async onActiveFileChange(event: vscode.TextDocumentChangeEvent) {
+        let activeScript = await Resource.getActiveScript();
+
+        if (activeScript) {
+            activeScript.setCode(event.document.getText());
+        }
     }
 }
