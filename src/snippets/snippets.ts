@@ -7,7 +7,7 @@ import { serverSnippets } from './data/server';
 import { Resource } from '../resources/resource';
 
 export class SnippetCompletionItemProvider implements vscode.CompletionItemProvider {
-    private snippets: FunctionSnippet[] = [];
+    private static snippets: FunctionSnippet[] = [];
 
     constructor() {
         const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
@@ -24,13 +24,13 @@ export class SnippetCompletionItemProvider implements vscode.CompletionItemProvi
     private loadSnippets(snippets: Function[], scriptSide: ScriptSide) {
         snippets.forEach((snippet: Function) => {
             let snippetItem = new FunctionSnippet(snippet, scriptSide);
-            this.snippets.push(snippetItem);
+            SnippetCompletionItemProvider.snippets.push(snippetItem);
         });
     }
 
     public async provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): Promise<vscode.CompletionItem[]> {
         let activeScript = await Resource.getActiveScript();
-        let snippets = this.snippets;
+        let snippets = SnippetCompletionItemProvider.snippets;
 
         if (activeScript) {
             activeScript.setCode(document.getText());
@@ -38,7 +38,7 @@ export class SnippetCompletionItemProvider implements vscode.CompletionItemProvi
         
         // Neighbour script snippets
         if (activeScript) {
-            let functions = activeScript.parent.getFunctions();
+            let functions = activeScript.parent.getFunctions(false, activeScript.fullPath);
             let neighbourSnippets = functions.map(func => FunctionSnippet.fromResourceFunction(func));
             snippets = snippets.concat(neighbourSnippets);
         }
@@ -54,11 +54,19 @@ export class SnippetCompletionItemProvider implements vscode.CompletionItemProvi
         return snippets.map(snippet => snippet.completionItem);
     }
 
-    public static async onActiveFileChange(event: vscode.TextDocumentChangeEvent) {
+    public static async onActiveFileChange(document: vscode.TextDocument) {
         let activeScript = await Resource.getActiveScript();
 
         if (activeScript) {
-            activeScript.setCode(event.document.getText());
+            activeScript.setCode(document.getText());
+        }
+    }
+
+    public static getFunctions(scriptSide: ScriptSide): FunctionSnippet[] {
+        if (scriptSide === ScriptSide.Client || scriptSide === ScriptSide.Server) {
+            return SnippetCompletionItemProvider.snippets.filter(snippet => snippet.scriptSide === scriptSide || snippet.scriptSide === ScriptSide.Shared);
+        } else {
+            return SnippetCompletionItemProvider.snippets.filter(snippet => snippet.scriptSide === scriptSide);
         }
     }
 }

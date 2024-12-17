@@ -1,11 +1,12 @@
 import * as fs from 'fs';
 import * as vscode from 'vscode';
-import luaparse, { FunctionDeclaration, Node } from 'luaparse';
+import luaparse, { CallExpression, FunctionDeclaration, IndexExpression, MemberExpression, Node } from 'luaparse';
 import { Resource } from "./resource";
 import { ResourceFunction } from './function';
 import { FunctionParameter } from './parameter';
 import { ScriptSide } from '../enums/script-side';
 import { ErrorLens } from '../error-lens/error-lens';
+import { SnippetCompletionItemProvider } from '../snippets/snippets';
 
 interface ScriptError {
     line: number;
@@ -60,6 +61,7 @@ export class ResourceScript {
         
         this.loadNodes(content);
         this.loadFunctions();
+        this.loadCalls();
         this.loadErrors();
     }
 
@@ -136,8 +138,60 @@ export class ResourceScript {
             const functionName = (node.identifier && node.identifier.type === 'Identifier') ? node.identifier.name : 'anonymous';
             const parameters = node.parameters.map((param: any) => new FunctionParameter('any', param.name));
 
-            return new ResourceFunction(this, functionName, parameters, node.loc?.start.line, node.loc?.end.line);
+            return new ResourceFunction(this, functionName, parameters, node.loc?.start.line, node.loc?.end.line, node.isLocal);
         }).filter((func): func is ResourceFunction => func !== null);
+    }
+
+    private getScriptFunctions(): string[] {
+        let scriptFunctions = this.functions.map(func => func.functionName);
+        let globalFunctions = SnippetCompletionItemProvider.getFunctions(this.type).map(snippet => snippet.func.functionName);
+
+        return [...new Set([...scriptFunctions, ...globalFunctions])];
+    }
+
+    private getResourceFunctions(): string[] {
+        let resource = this.parent;
+        let resourceFunctions = resource.getFunctions(false, this.fullPath).map(func => func.functionName);
+        return resourceFunctions;
+    }
+
+    private isExportCall(call: CallExpression): boolean {
+        if (call.base.type === 'MemberExpression') {
+            let member = call.base as MemberExpression;
+            if (member.indexer === ':' && member.base.type === 'IndexExpression') {
+                let index = member.base as IndexExpression;
+                if (index.base.type === 'Identifier' && index.base.name === 'exports') {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private loadCalls() {
+        let calls = this.nodes.filter((node: Node) => node.type === 'CallExpression') as CallExpression[];
+        let scriptFunctions = this.getResourceFunctions();
+
+        for (let call of calls) {
+            // @TODO: Add exports
+            let isExport = this.isExportCall(call);
+            if (isExport) {
+                continue;
+            }
+
+            // if script function does not exist, add error
+            if (call.base.type === 'Identifier') {
+                let identifier = call.base as any;
+                if (!scriptFunctions.includes(identifier.name)) {
+                    this.errors.push({
+                        line: identifier.loc.start.line,
+                        column: identifier.loc.start.column,
+                        message: `Function '${identifier.name}' is not defined`
+                    });
+                }
+            }
+        }
     }
 
     private loadErrors() {

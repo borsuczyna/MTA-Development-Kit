@@ -32,7 +32,11 @@ function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(ErrorLens.activate());
 
     // Document change
-    context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(SnippetCompletionItemProvider.onActiveFileChange));
+    context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((event) => SnippetCompletionItemProvider.onActiveFileChange(event.document)));
+
+    // On file open
+    vscode.workspace.textDocuments.forEach((document) => SnippetCompletionItemProvider.onActiveFileChange(document));
+
 
     const resourceTreeProvider = new ResourceTreeProvider();
     vscode.window.registerTreeDataProvider('exportsView', resourceTreeProvider);

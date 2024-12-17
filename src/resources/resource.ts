@@ -44,8 +44,9 @@ export class Resource {
         return null;
     }
 
-    public getFunctions(): ResourceFunction[] {
-        return this.scripts.reduce((acc, script) => [...acc, ...script.functions], [] as ResourceFunction[]);
+    public getFunctions(includeLocal: boolean = false, localParent: string | null = null): ResourceFunction[] {
+        let functions = this.scripts.reduce((acc, script) => [...acc, ...script.functions], [] as ResourceFunction[]);
+        return includeLocal ? functions : functions.filter(func => !func.isLocal || func.parent.fullPath === localParent);
     }
 
     private async loadScripts(scriptNodes: HTMLCollectionOf<Element>) {

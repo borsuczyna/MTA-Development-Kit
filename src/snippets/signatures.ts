@@ -49,7 +49,7 @@ export class SignatureHelpProvider implements vscode.SignatureHelpProvider {
 
         // Neighbour script snippets
         if (activeScript) {
-            let functions = activeScript.parent.getFunctions();
+            let functions = activeScript.parent.getFunctions(false, activeScript.fullPath);
             let neighbourSnippets = functions.map(func => FunctionSnippet.fromResourceFunction(func));
             snippets = snippets.concat(neighbourSnippets);
         }
