@@ -15,6 +15,7 @@ interface ScriptError {
     column: number;
     lineLength?: number;
     message: string;
+    type: vscode.DiagnosticSeverity;
 }
 
 interface ScriptCall {
@@ -123,7 +124,8 @@ export class ResourceScript {
                     line: errorLine,
                     column,
                     lineLength,
-                    message
+                    message,
+                    type: vscode.DiagnosticSeverity.Error
                 });
     
                 const problematicLine = error.line ? Math.max(1, error.line - 1) : 1;
@@ -232,7 +234,8 @@ export class ResourceScript {
                     this.errors.push({
                         line: identifier.loc.start.line,
                         column: identifier.loc.start.column,
-                        message: `Function '${identifier.name}' is not defined`
+                        message: `Function '${identifier.name}' is not defined`,
+                        type: vscode.DiagnosticSeverity.Warning
                     });
                 }
 
@@ -251,7 +254,8 @@ export class ResourceScript {
         ErrorLens.setErrors(uri, this.errors.map(error => {
             return {
                 range: new vscode.Range(error.line - 1, 0, error.line - 1, error.lineLength ?? 0),
-                message: error.message
+                message: error.message,
+                type: error.type
             };
         }));
     }

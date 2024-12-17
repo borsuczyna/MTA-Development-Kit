@@ -1,8 +1,9 @@
 import * as vscode from 'vscode';
 
-interface ErrorLensError {
+interface ErrorLensMessage {
     range: vscode.Range;
     message: string;
+    type: vscode.DiagnosticSeverity;
 }
 
 export class ErrorLens {
@@ -30,8 +31,8 @@ export class ErrorLens {
         this.diagnosticCollection.dispose();
     }
 
-    public static addError(uri: vscode.Uri, range: vscode.Range, message: string) {
-        const diagnostic = new vscode.Diagnostic(range, message, vscode.DiagnosticSeverity.Error);
+    public static addError(uri: vscode.Uri, range: vscode.Range, message: string, type: vscode.DiagnosticSeverity = vscode.DiagnosticSeverity.Error): vscode.Diagnostic {
+        const diagnostic = new vscode.Diagnostic(range, message, type);
 
         if (!this.errors.has(uri.fsPath)) {
             this.errors.set(uri.fsPath, []);
@@ -48,9 +49,9 @@ export class ErrorLens {
         return diagnostic;
     }
 
-    public static setErrors(uri: vscode.Uri, errors: ErrorLensError[]) {
+    public static setErrors(uri: vscode.Uri, errors: ErrorLensMessage[]) {
         const diagnostics: vscode.Diagnostic[] = errors.map(error => {
-            return new vscode.Diagnostic(error.range, error.message, vscode.DiagnosticSeverity.Error);
+            return new vscode.Diagnostic(error.range, error.message, error.type);
         });
 
         this.errors.set(uri.fsPath, diagnostics);
