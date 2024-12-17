@@ -158,12 +158,12 @@ export class ResourceScript {
                     const parameters = init.parameters.map((param: any) => new FunctionParameter('any', param.name));
 
                     this.functions.push(new ResourceFunction(
-                    this,
-                    functionName,
-                    parameters,
-                    init.loc?.start.line,
-                    init.loc?.end.line,
-                    statement.type === 'LocalStatement'
+                        this,
+                        functionName,
+                        parameters,
+                        init.loc?.start.line,
+                        init.loc?.end.line,
+                        statement.type === 'LocalStatement'
                     ));
                 }
             }
