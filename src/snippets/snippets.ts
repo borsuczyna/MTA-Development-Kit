@@ -29,11 +29,28 @@ export class SnippetCompletionItemProvider implements vscode.CompletionItemProvi
     }
 
     public async provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): Promise<vscode.CompletionItem[]> {
-        let activeScript = await Resource.getActiveScript();
+        const activeScript = await Resource.getActiveScript();
         let snippets = SnippetCompletionItemProvider.snippets;
 
         if (activeScript) {
             activeScript.setCode(document.getText());
+        }
+
+        // Exports
+        const textBeforeCursor = document.lineAt(position).text.substring(0, position.character);
+        const exportMatch = textBeforeCursor.match(/exports\[(?:'|")(.*?)(?:'|")\]:(\w+)?/);
+        if (exportMatch) {
+            const resourceName = exportMatch[1];
+            console.log('resourceName', resourceName);
+
+            if (resourceName) {
+                const resource = Resource.getResourceByName(resourceName);
+                console.log('resource', resource);
+                if (resource) {
+                    let exportSnippets = resource.getExports().map(exportItem => exportItem.functionReference?.toSnippetFunction()).filter(snippet => snippet !== undefined);
+                    return exportSnippets.map(snippet => snippet.completionItem);
+                }
+            }
         }
         
         // Neighbour script snippets

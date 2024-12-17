@@ -42,12 +42,14 @@ export class SignatureHelpProvider implements vscode.SignatureHelpProvider {
         if (!functionCallMatch) {
             return null;
         }
+        
+        const activeScript = Resource.getActiveScriptCached();
 
+        // Exports
         const functionCallMatchPosition = functionCallMatch.index;
         const functionName = functionCallMatch[0].replace(/\s*\($/, '');
         const textBeforeFunctionCall = lineText.substring(0, functionCallMatchPosition);
         const exportMatch = textBeforeFunctionCall.match(/exports\[(?:'|")(.*?)(?:'|")\]:/);
-        const activeScript = Resource.getActiveScriptCached();
         
         if (exportMatch) {
             const exportsString = exportMatch[0];

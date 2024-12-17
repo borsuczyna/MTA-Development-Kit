@@ -13,7 +13,7 @@ function activate(context: vscode.ExtensionContext) {
     // Snippets
     context.subscriptions.push(vscode.languages.registerCompletionItemProvider(
         { language: 'mtalua' },
-        new SnippetCompletionItemProvider()
+        new SnippetCompletionItemProvider(), ':'
     ));
 
     // Signature
