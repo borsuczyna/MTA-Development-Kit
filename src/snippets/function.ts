@@ -2,6 +2,8 @@ import * as vscode from 'vscode';
 import { ScriptSide } from '../enums/script-side';
 import { firstLetterUppercase } from '../utils/firstLetterUppercase';
 import { ResourceFunction } from '../resources/function';
+import { ResourceScript } from '../resources/script';
+import { FunctionParameter } from '../resources/parameter';
 
 export interface Argument {
     type: string;
@@ -153,5 +155,27 @@ export class FunctionSnippet {
             })),
             optionalArguments: []
         }, functionElement.parent.type);
+    }
+
+    public toResourceFunction(script: ResourceScript): ResourceFunction {
+        let parameters: FunctionParameter[] = [];
+
+        this.func.requiredArguments.forEach(arg => {
+            let parameter = new FunctionParameter(arg.type, arg.name ?? '');
+            parameter.isOptional = false;
+            parameters.push(parameter);
+        });
+
+        this.func.optionalArguments.forEach(arg => {
+            let parameter = new FunctionParameter(arg.type, arg.name ?? '');
+            parameter.isOptional = true;
+            parameters.push(parameter);
+        });
+
+        return new ResourceFunction(script, this.func.functionName, parameters, null, null, false, {
+            description: this.func.description,
+            args: parameters.map(param => param.type ?? ''),
+            returns: this.func.returnValues.join(', ')
+        });
     }
 }

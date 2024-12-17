@@ -1,6 +1,7 @@
 export class FunctionParameter {
     public type: string;
     public name: string;
+    public isOptional: boolean = false;
 
     constructor(type: string, name: string) {
         this.type = (type ?? '').trim();

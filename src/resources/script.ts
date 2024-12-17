@@ -230,6 +230,7 @@ export class ResourceScript {
                 let identifier = call.base as any;
                 let definition = this.findFunctionInResource(identifier.name);
 
+                // if function is not defined in script
                 if (!definition) {
                     this.errors.push({
                         line: identifier.loc.start.line,
@@ -237,6 +238,19 @@ export class ResourceScript {
                         message: `Function '${identifier.name}' is not defined`,
                         type: vscode.DiagnosticSeverity.Warning
                     });
+                } else {
+                    // if argument count is wrong
+                    if (call.arguments.length < definition.requiredParameters.length) {
+                        let atLeast = definition.requiredParameters.length !== definition.parameters.length ? 'at least ' : '';
+                        let argumentsForm = definition.requiredParameters.length === 1 ? 'argument' : 'arguments';
+
+                        this.errors.push({
+                            line: identifier.loc.start.line,
+                            column: identifier.loc.start.column,
+                            message: `Function '${identifier.name}' expects ${atLeast}${definition.requiredParameters.length} ${argumentsForm}, got ${call.arguments.length}`,
+                            type: vscode.DiagnosticSeverity.Warning
+                        });
+                    }
                 }
 
                 this.calls.push({
@@ -270,8 +284,9 @@ export class ResourceScript {
             return functionDefinition;
         }
 
-        if (SnippetCompletionItemProvider.getFunctions(this.type).find(snippet => snippet.func.functionName === name)) {
-            return new ResourceFunction(this, name, [], null, null, false);
+        let globalFunction = SnippetCompletionItemProvider.getFunctions(this.type).find(snippet => snippet.func.functionName === name);
+        if (globalFunction) {
+            return globalFunction.toResourceFunction(this);
         }
 
         return null;

@@ -39,7 +39,7 @@ export class SnippetCompletionItemProvider implements vscode.CompletionItemProvi
         // Neighbour script snippets
         if (activeScript) {
             let functions = activeScript.parent.getFunctions(false, activeScript.fullPath);
-            let neighbourSnippets = functions.map(func => FunctionSnippet.fromResourceFunction(func));
+            let neighbourSnippets = functions.map(func => func.toSnippetFunction());
             snippets = snippets.concat(neighbourSnippets);
         }
 

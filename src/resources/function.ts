@@ -1,4 +1,5 @@
 import { DeclarationDocumentation } from "../docs/docs";
+import { FunctionSnippet } from "../snippets/function";
 import { FunctionParameter } from "./parameter";
 import { ResourceScript } from "./script";
 
@@ -27,5 +28,21 @@ export class ResourceFunction {
         this.endLine = endLine;
         this.isLocal = isLocal;
         this.documentation = documentation;
+    }
+
+    public static fromSnippet(script: ResourceScript, snippet: FunctionSnippet): ResourceFunction {
+        return snippet.toResourceFunction(script);
+    }
+
+    public toSnippetFunction(): FunctionSnippet {
+        return FunctionSnippet.fromResourceFunction(this);
+    }
+    
+    get requiredParameters(): FunctionParameter[] {
+        return this.parameters.filter(param => !param.isOptional);
+    }
+
+    get optionalParameters(): FunctionParameter[] {
+        return this.parameters.filter(param => param.isOptional);
     }
 }
