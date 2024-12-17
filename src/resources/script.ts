@@ -56,8 +56,11 @@ export class ResourceScript {
     }
 
     public setCode(content: string) {
+        this.errors = [];
+        
         this.loadNodes(content);
         this.loadFunctions();
+        this.loadErrors();
     }
 
     private forceParse(code: string): { nodes: Node[]; errors: ScriptError[] } {
@@ -119,15 +122,7 @@ export class ResourceScript {
         let { nodes, errors } = this.forceParse(content);
 
         this.nodes = nodes;
-        this.errors = errors;
-
-        let uri = vscode.Uri.file(this.fullPath);
-        ErrorLens.setErrors(uri, this.errors.map(error => {
-            return {
-                range: new vscode.Range(error.line - 1, 0, error.line - 1, error.lineLength ?? 0),
-                message: error.message
-            };
-        }));
+        this.errors.push(...errors);
     }
 
     private loadFunctions() {
@@ -143,6 +138,16 @@ export class ResourceScript {
 
             return new ResourceFunction(this, functionName, parameters, node.loc?.start.line, node.loc?.end.line);
         }).filter((func): func is ResourceFunction => func !== null);
+    }
+
+    private loadErrors() {
+        let uri = vscode.Uri.file(this.fullPath);
+        ErrorLens.setErrors(uri, this.errors.map(error => {
+            return {
+                range: new vscode.Range(error.line - 1, 0, error.line - 1, error.lineLength ?? 0),
+                message: error.message
+            };
+        }));
     }
 
     public getFunction(name: string): ResourceFunction | null {
