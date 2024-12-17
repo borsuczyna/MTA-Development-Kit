@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as vscode from 'vscode';
-import luaparse, { CallExpression, FunctionDeclaration, IndexExpression, MemberExpression, Node } from 'luaparse';
+import luaparse, { AssignmentStatement, CallExpression, FunctionDeclaration, IndexExpression, LocalStatement, MemberExpression, Node } from 'luaparse';
 import { Resource } from "./resource";
 import { ResourceFunction } from './function';
 import { FunctionParameter } from './parameter';
@@ -124,22 +124,50 @@ export class ResourceScript {
         let { nodes, errors } = this.forceParse(content);
 
         this.nodes = nodes;
+        console.log(JSON.stringify(nodes, null, 4));
         this.errors.push(...errors);
     }
 
     private loadFunctions() {
+        // FunctionDeclarations
         let functions = this.nodes.filter((node: Node) => node.type === 'FunctionDeclaration') as FunctionDeclaration[];
 
-        this.functions = functions.map((node: FunctionDeclaration) => {
-            if (node === null) {
-                return null;
-            }
-
+        for (let node of functions) {
             const functionName = (node.identifier && node.identifier.type === 'Identifier') ? node.identifier.name : 'anonymous';
             const parameters = node.parameters.map((param: any) => new FunctionParameter('any', param.name));
 
-            return new ResourceFunction(this, functionName, parameters, node.loc?.start.line, node.loc?.end.line, node.isLocal);
-        }).filter((func): func is ResourceFunction => func !== null);
+            this.functions.push(new ResourceFunction(
+                this,
+                functionName,
+                parameters,
+                node.loc?.start.line,
+                node.loc?.end.line,
+                node.isLocal
+            ));
+        }
+
+        // LocalStatement, AssignmentStatement
+        let assignmentsAndLocals = this.nodes.filter((node: Node) => node.type === 'AssignmentStatement' || node.type === 'LocalStatement') as (AssignmentStatement | LocalStatement)[];
+
+        for (let statement of assignmentsAndLocals) {
+            for (let index in statement.init) {
+                let init = statement.init[index];
+                if (init.type === 'FunctionDeclaration') {
+                    const variable = statement.variables[index];
+                    const functionName = variable.type === 'Identifier' ? variable.name : 'anonymous';
+                    const parameters = init.parameters.map((param: any) => new FunctionParameter('any', param.name));
+
+                    this.functions.push(new ResourceFunction(
+                    this,
+                    functionName,
+                    parameters,
+                    init.loc?.start.line,
+                    init.loc?.end.line,
+                    statement.type === 'LocalStatement'
+                    ));
+                }
+            }
+        }
     }
 
     private getScriptFunctions(): string[] {
