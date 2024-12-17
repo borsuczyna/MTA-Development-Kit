@@ -43,7 +43,44 @@ export class SignatureHelpProvider implements vscode.SignatureHelpProvider {
             return null;
         }
 
+        const functionCallMatchPosition = functionCallMatch.index;
         const functionName = functionCallMatch[0].replace(/\s*\($/, '');
+        const textBeforeFunctionCall = lineText.substring(0, functionCallMatchPosition);
+        const exportMatch = textBeforeFunctionCall.match(/exports\[(?:'|")(.*?)(?:'|")\]:/);
+        
+        if (exportMatch) {
+            const exportsString = exportMatch[0];
+            const isExport = textBeforeFunctionCall.endsWith(exportsString);
+            const exportResource = exportMatch[1];
+
+            if (isExport) {
+                let resource = Resource.getResourceByName(exportResource);
+                if (!resource) {
+                    return null;
+                }
+
+                let resourceExports = resource.getExport(functionName);
+                if (!resourceExports || !resourceExports.functionReference) {
+                    return null;
+                }
+
+                const signatureHelp = new vscode.SignatureHelp();
+                const signature = resourceExports.functionReference.toSnippetFunction().signature;
+
+                // (signature.documentation as vscode.MarkdownString).appendMarkdown(`\n\n**Exported from:** ${resource.name}`);
+
+                signatureHelp.signatures.push(signature);
+                signatureHelp.activeSignature = 0;
+                signatureHelp.activeParameter = countCommas(textBeforeCursor);
+
+                if (signatureHelp.activeParameter === -1) {
+                    return null;
+                }
+
+                return signatureHelp;
+            }
+        }
+
         let activeScript = Resource.getActiveScriptCached();
         let snippets = this.snippets;
 

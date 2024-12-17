@@ -28,6 +28,10 @@ export class FunctionParameter {
         for (let [index, parameter] of b.entries()) {
             if (a[index]) {
                 a[index].name = parameter.name;
+
+                if (parameter.type && parameter.type !== 'any' && parameter.type !== '') {
+                    a[index].type = parameter.type;
+                }
             } else {
                 a[index] = parameter;
             }

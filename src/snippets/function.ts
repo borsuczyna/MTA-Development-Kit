@@ -137,7 +137,7 @@ export class FunctionSnippet {
         }
 
         if (functionElement.documentation?.returns) {
-            if (functionElement.documentation.returns.split(' ').length === 0) {
+            if (functionElement.documentation.returns.split(' ').filter(e => e.length > 0).length === 0) {
                 functionName = `${functionElement.documentation.returns} = ${functionName}`;
             } else {
                 description += '\n\nReturns: ' + functionElement.documentation.returns;

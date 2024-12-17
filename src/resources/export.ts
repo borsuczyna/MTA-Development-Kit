@@ -5,6 +5,7 @@ import { FunctionParameter } from './parameter';
 import { ResourceExportItem } from './export-item';
 import { highlightCode } from '../utils/highlight';
 import { ScriptSide } from '../enums/script-side';
+import { ResourceFunction } from './function';
 
 export class ExportsSide extends vscode.TreeItem {
     children?: vscode.TreeItem[];
@@ -30,6 +31,7 @@ export class ResourceExport {
     public fullPath: string | null = null;
     public startLine: number | null = null;
     public endLine: number | null = null;
+    public functionReference: ResourceFunction | null = null;
 
     constructor(parent: Resource, functionName: string, returnType: FunctionParameter, parameters: FunctionParameter[], description: string | null, type: ScriptSide = ScriptSide.Shared) {
         this.parent = parent;

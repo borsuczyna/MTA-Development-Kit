@@ -48,6 +48,14 @@ export class Resource {
         let functions = this.scripts.reduce((acc, script) => [...acc, ...script.functions], [] as ResourceFunction[]);
         return includeLocal ? functions : functions.filter(func => !func.isLocal || pathCompare(func.parent.fullPath, localParent || ''));
     }
+    
+    public getExports(): ResourceExport[] {
+        return this.exports;
+    }
+
+    public getExport(name: string): ResourceExport | null {
+        return this.exports.find(exp => exp.functionName === name) || null;
+    }
 
     private async loadScripts(scriptNodes: HTMLCollectionOf<Element>) {
         this.scripts = await Promise.all(Array.from(scriptNodes).map(async scriptNode => {
@@ -84,6 +92,14 @@ export class Resource {
                 resourceExport.fullPath = possibleFunction.parent.fullPath;
                 resourceExport.startLine = possibleFunction.startLine;
                 resourceExport.endLine = possibleFunction.endLine;
+                resourceExport.functionReference = possibleFunction;
+                
+                if (possibleFunction.documentation) {
+                    resourceExport.description = resourceExport.description || possibleFunction.documentation.description || null;
+                    if (possibleFunction.documentation.returns && possibleFunction.documentation.returns !== 'any' && possibleFunction.documentation.returns !== '') {
+                        resourceExport.returnType = FunctionParameter.parse(possibleFunction.documentation.returns);
+                    }
+                }
             }
 
             return resourceExport;
@@ -110,6 +126,10 @@ export class Resource {
             vscode.window.showErrorMessage(`Error loading meta.xml: ${errorMessage}`);
             vscode.window.showErrorMessage(`Stack: ${(error as Error).stack}`);
         }
+    }
+
+    public getExportByName(name: string): ResourceExport | null {
+        return this.exports.find(exportItem => exportItem.functionName === name) || null;
     }
 
     public static async getResources(): Promise<Resource[]> {
@@ -209,5 +229,10 @@ export class Resource {
         }
 
         return null;
+    }
+
+    public static getResourceByName(name: string): Resource | null {
+        const resources = ResourceTreeProvider.getResourcesCached();
+        return resources.find(resource => resource.name === name) || null;
     }
 }

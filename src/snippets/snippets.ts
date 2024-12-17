@@ -50,7 +50,7 @@ export class SnippetCompletionItemProvider implements vscode.CompletionItemProvi
         } else {
             snippets = FunctionSnippet.filterSnippets(snippets, ScriptSide.Shared);
         }
-        
+
         return snippets.map(snippet => snippet.completionItem);
     }
 

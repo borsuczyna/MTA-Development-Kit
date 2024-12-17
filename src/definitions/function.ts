@@ -21,7 +21,6 @@ export class FunctionDefinitionProvider implements vscode.DefinitionProvider {
                 return undefined;
             }
 
-            console.log(call.definition);
             return new vscode.Location(vscode.Uri.file(call.definition.parent.fullPath), new vscode.Range((call.definition.startLine || 1) - 1, 0, call.definition.endLine || 0, 0));
         }
 

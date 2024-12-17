@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as vscode from 'vscode';
-import luaparse, { AssignmentStatement, CallExpression, Comment, FunctionDeclaration, IndexExpression, LocalStatement, MemberExpression, Node } from 'luaparse';
+import luaparse, { AssignmentStatement, CallExpression, Comment, Expression, FunctionDeclaration, Identifier, IndexExpression, LocalStatement, MemberExpression, Node, StringLiteral } from 'luaparse';
 import { Resource } from "./resource";
 import { ResourceFunction } from './function';
 import { FunctionParameter } from './parameter';
@@ -11,9 +11,11 @@ import { pathCompare } from '../utils/pathCompare';
 import { DeclarationDocumentation, readDocs } from '../docs/docs';
 
 interface ScriptError {
-    line: number;
-    column: number;
-    lineLength?: number;
+    // startLine: number;
+    // startColumn: number;
+    // endLine: number;
+    // endColumn: number;
+    range: vscode.Range;
     message: string;
     type: vscode.DiagnosticSeverity;
 }
@@ -121,9 +123,11 @@ export class ResourceScript {
                 }
 
                 errors.push({
-                    line: errorLine,
-                    column,
-                    lineLength,
+                    // startLine: errorLine,
+                    // startColumn: column,
+                    // endLine: errorLine,
+                    // endColumn: lineLength - column,
+                    range: new vscode.Range(errorLine - 1, column, errorLine - 1, lineLength),
                     message,
                     type: vscode.DiagnosticSeverity.Error
                 });
@@ -135,7 +139,7 @@ export class ResourceScript {
         }
 
         // remove duplicate errors on same line
-        errors = errors.filter((error, index, self) => index === self.findIndex((t) => t.line === error.line));
+        errors = errors.filter((error, index, self) => index === self.findIndex((t) => t.range.start.line === error.range.start.line));
     
         return { nodes, errors };
     }
@@ -199,43 +203,82 @@ export class ResourceScript {
         }
     }
 
-    private isExportCall(call: CallExpression): boolean {
+    private isExportCall(call: CallExpression): string | null {
         if (call.base.type === 'MemberExpression') {
             let member = call.base as MemberExpression;
             if (member.indexer === ':' && member.base.type === 'IndexExpression') {
                 let index = member.base as IndexExpression;
                 if (index.base.type === 'Identifier' && index.base.name === 'exports') {
-                    return true;
+                    if (index.index.type === 'StringLiteral') {
+                        return (index.index as StringLiteral).raw.replace(/"/g, '').replace(/'/g, '');
+                    } else if (index.index.type === 'Identifier') {
+                        return (index.index as any).name;
+                    } else {
+                        return '';
+                    }
                 }
             }
         }
 
-        return false;
+        return null;
     }
 
     private loadCalls() {
         let calls = this.nodes.filter((node: Node) => node.type === 'CallExpression') as CallExpression[];
-        let scriptFunctions = this.getResourceFunctions();
         this.calls = [];
 
         for (let call of calls) {
-            // @TODO: Add exports
-            let isExport = this.isExportCall(call);
-            if (isExport) {
-                continue;
-            }
-
             // if script function does not exist, add error
-            if (call.base.type === 'Identifier') {
-                let identifier = call.base as any;
-                let definition = this.findFunctionInResource(identifier.name);
+            if (call.base.type === 'Identifier' || call.base.type === 'MemberExpression') {
+                let identifier = call.base as Identifier | MemberExpression;
+                let definition: ResourceFunction | null = null;
+                let _arguments: Expression[] = [];
+                let functionName = '';
+                let range: vscode.Range | null = null;
+
+                // @TODO: Add exports
+                let isExport = this.isExportCall(call);
+                if (isExport) { 
+                    _arguments = call.arguments;
+                    functionName = (call.base as any as MemberExpression).identifier.name;
+                    let resource = Resource.getResourceByName(isExport);
+                    let location = (call.base as any as MemberExpression).identifier.loc;
+                    range = location ? new vscode.Range(location.start.line - 1, location.start.column, location.end.line - 1, location.end.column) : null;
+
+                    if (resource) {
+                        let exportDefinition = resource.getExportByName(functionName);
+                        if (exportDefinition) {
+                            definition = resource.getFunction(functionName, this.type, false);
+                        } else {
+                            if (!range) {
+                                continue;
+                            }
+
+                            this.errors.push({
+                                range: range,
+                                message: `Function '${functionName}' is not exported in resource '${isExport}', make sure it's added to the exports in meta.xml`,
+                                type: vscode.DiagnosticSeverity.Error
+                            });
+
+                            continue;
+                        }
+                    }
+                } else {
+                    _arguments = call.arguments;
+                    functionName = (identifier as Identifier).name;
+                    definition = this.findFunctionInResource(functionName);
+                    range = identifier.loc ? new vscode.Range(identifier.loc.start.line - 1, identifier.loc.start.column, identifier.loc.end.line - 1, identifier.loc.end.column) : null;
+                }
+
+                if (!range) {
+                    continue;
+                }
 
                 // if function is not defined in script
                 if (!definition) {
                     this.errors.push({
-                        line: identifier.loc.start.line,
-                        column: identifier.loc.start.column,
-                        message: `Function '${identifier.name}' is not defined`,
+                        range: range,
+                        message: `Function '${functionName}' is not defined`,
                         type: vscode.DiagnosticSeverity.Warning
                     });
                 } else {
@@ -245,18 +288,25 @@ export class ResourceScript {
                         let argumentsForm = definition.requiredParameters.length === 1 ? 'argument' : 'arguments';
 
                         this.errors.push({
-                            line: identifier.loc.start.line,
-                            column: identifier.loc.start.column,
-                            message: `Function '${identifier.name}' expects ${atLeast}${definition.requiredParameters.length} ${argumentsForm}, got ${call.arguments.length}`,
+                            range: range,
+                            message: `Function '${functionName}' expects ${atLeast}${definition.requiredParameters.length} ${argumentsForm}, got ${call.arguments.length}`,
+                            type: vscode.DiagnosticSeverity.Warning
+                        });
+                    } else if (call.arguments.length > definition.parameters.length) {
+                        let argumentsForm = definition.parameters.length === 1 ? 'argument' : 'arguments';
+
+                        this.errors.push({
+                            range: range,
+                            message: `Function '${functionName}' expects ${definition.parameters.length} ${argumentsForm}, got ${call.arguments.length}`,
                             type: vscode.DiagnosticSeverity.Warning
                         });
                     }
                 }
 
                 this.calls.push({
-                    functionName: identifier.name,
-                    line: identifier.loc.start.line,
-                    column: identifier.loc.start.column,
+                    functionName: functionName,
+                    line: range.start.line + 1,
+                    column: range.start.character,
                     definition
                 });
             }
@@ -267,7 +317,7 @@ export class ResourceScript {
         let uri = vscode.Uri.file(this.fullPath);
         ErrorLens.setErrors(uri, this.errors.map(error => {
             return {
-                range: new vscode.Range(error.line - 1, 0, error.line - 1, error.lineLength ?? 0),
+                range: error.range,
                 message: error.message,
                 type: error.type
             };

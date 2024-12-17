@@ -14,6 +14,7 @@
 - [x] Error lens
 - [ ] Errors for calling unknown function
 - [ ] Errors for using unknown variable
+- [x] Warning for incorrect argument count
 - [ ] Warnings (for example when source is used as player in trigger)
 - [ ] Trigger snippets
 - [ ] Type warnings, for example when using wrong type in function
