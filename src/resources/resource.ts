@@ -31,11 +31,11 @@ export class Resource {
         return new ResourceItem(this);
     }
 
-    public getFunction(name: string, type: ScriptSide | null): ResourceFunction | null {
+    public getFunction(name: string, type: ScriptSide | null, includeLocal: boolean = false, localParent: string | null = null): ResourceFunction | null {
         let possibleScripts = (type && type !== ScriptSide.Shared) ? this.scripts.filter(script => script.type === type) : this.scripts;
 
         for (const script of possibleScripts) {
-            let functionItem = script.getFunction(name);
+            let functionItem = script.getFunction(name, includeLocal, localParent);
             if (functionItem) {
                 return functionItem;
             }
@@ -46,7 +46,7 @@ export class Resource {
 
     public getFunctions(includeLocal: boolean = false, localParent: string | null = null): ResourceFunction[] {
         let functions = this.scripts.reduce((acc, script) => [...acc, ...script.functions], [] as ResourceFunction[]);
-        return includeLocal ? functions : functions.filter(func => !func.isLocal || func.parent.fullPath === localParent);
+        return includeLocal ? functions : functions.filter(func => !func.isLocal || pathCompare(func.parent.fullPath, localParent || ''));
     }
 
     private async loadScripts(scriptNodes: HTMLCollectionOf<Element>) {
@@ -169,6 +169,20 @@ export class Resource {
         for (const resource of resources) {
             for (const script of resource.scripts) {
                 if (pathCompare(script.fullPath, fullPath)) {
+                    return script;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public static async getScriptByPath(path: string): Promise<ResourceScript | null> {
+        const resources = await ResourceTreeProvider.getResources();
+
+        for (const resource of resources) {
+            for (const script of resource.scripts) {
+                if (pathCompare(script.fullPath, path)) {
                     return script;
                 }
             }

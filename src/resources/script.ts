@@ -7,12 +7,20 @@ import { FunctionParameter } from './parameter';
 import { ScriptSide } from '../enums/script-side';
 import { ErrorLens } from '../error-lens/error-lens';
 import { SnippetCompletionItemProvider } from '../snippets/snippets';
+import { pathCompare } from '../utils/pathCompare';
 
 interface ScriptError {
     line: number;
     column: number;
     lineLength?: number;
     message: string;
+}
+
+interface ScriptCall {
+    functionName: string;
+    line: number;
+    column: number;
+    definition: ResourceFunction | null;
 }
 
 export class ResourceScript {
@@ -23,6 +31,7 @@ export class ResourceScript {
     public functions: ResourceFunction[] = [];
     public compiled: boolean = false;
     private nodes: Node[] = [];
+    private calls: ScriptCall[] = [];
     private errors: ScriptError[] = [];
 
     constructor(parent: Resource, fullPath: string, path: string, type: ScriptSide = ScriptSide.Shared) {
@@ -77,6 +86,12 @@ export class ResourceScript {
                 const ast = luaparse.parse(codeToParse, {
                     locations: true,
                     onCreateNode: (node) => {
+                        // do line fixup
+                        if (node.loc) {
+                            node.loc.start.line += currentLineOffset;
+                            node.loc.end.line += currentLineOffset;
+                        }
+
                         nodes.push(node);
                     }
                 });
@@ -124,12 +139,13 @@ export class ResourceScript {
         let { nodes, errors } = this.forceParse(content);
 
         this.nodes = nodes;
-        console.log(JSON.stringify(nodes, null, 4));
         this.errors.push(...errors);
     }
 
     private loadFunctions() {
         // FunctionDeclarations
+        this.functions = [];
+        
         let functions = this.nodes.filter((node: Node) => node.type === 'FunctionDeclaration') as FunctionDeclaration[];
 
         for (let node of functions) {
@@ -170,19 +186,6 @@ export class ResourceScript {
         }
     }
 
-    private getScriptFunctions(): string[] {
-        let scriptFunctions = this.functions.map(func => func.functionName);
-        let globalFunctions = SnippetCompletionItemProvider.getFunctions(this.type).map(snippet => snippet.func.functionName);
-
-        return [...new Set([...scriptFunctions, ...globalFunctions])];
-    }
-
-    private getResourceFunctions(): string[] {
-        let resource = this.parent;
-        let resourceFunctions = resource.getFunctions(false, this.fullPath).map(func => func.functionName);
-        return resourceFunctions;
-    }
-
     private isExportCall(call: CallExpression): boolean {
         if (call.base.type === 'MemberExpression') {
             let member = call.base as MemberExpression;
@@ -200,6 +203,7 @@ export class ResourceScript {
     private loadCalls() {
         let calls = this.nodes.filter((node: Node) => node.type === 'CallExpression') as CallExpression[];
         let scriptFunctions = this.getResourceFunctions();
+        this.calls = [];
 
         for (let call of calls) {
             // @TODO: Add exports
@@ -211,13 +215,21 @@ export class ResourceScript {
             // if script function does not exist, add error
             if (call.base.type === 'Identifier') {
                 let identifier = call.base as any;
-                if (!scriptFunctions.includes(identifier.name)) {
+                let definition = this.findFunctionInResource(identifier.name);
+                if (!definition) {
                     this.errors.push({
                         line: identifier.loc.start.line,
                         column: identifier.loc.start.column,
                         message: `Function '${identifier.name}' is not defined`
                     });
                 }
+
+                this.calls.push({
+                    functionName: identifier.name,
+                    line: identifier.loc.start.line,
+                    column: identifier.loc.start.column,
+                    definition
+                });
             }
         }
     }
@@ -232,7 +244,33 @@ export class ResourceScript {
         }));
     }
 
-    public getFunction(name: string): ResourceFunction | null {
-        return this.functions.find(func => func.functionName === name) || null;
+    public getFunction(name: string, includeLocal: boolean = false, localParent: string | null = null): ResourceFunction | null {
+        return this.functions.find(func => func.functionName === name && (includeLocal || !func.isLocal || pathCompare(func.parent.fullPath, localParent || ''))) || null;
+    }
+
+    public findFunctionInResource(name: string, includeLocal: boolean = false): ResourceFunction | null {
+        return this.parent.getFunction(name, this.type, includeLocal, this.fullPath);
+    }
+
+    private getScriptFunctions(): string[] {
+        let scriptFunctions = this.functions.map(func => func.functionName);
+        let globalFunctions = SnippetCompletionItemProvider.getFunctions(this.type).map(snippet => snippet.func.functionName);
+
+        return [...new Set([...scriptFunctions, ...globalFunctions])];
+    }
+
+    private getResourceFunctions(): string[] {
+        let resourceFunctions = this.parent.getFunctions(false, this.fullPath).map(func => func.functionName);
+        return resourceFunctions;
+    }
+
+    public getCalls(): ScriptCall[] {
+        return this.calls;
+    }
+
+    public getCall(range: vscode.Range): ScriptCall | null {
+        return this.calls.find(call => {
+            return range.start.line + 1 === call.line && range.start.character === call.column;
+        }) || null;
     }
 }

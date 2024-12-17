@@ -15,8 +15,6 @@ export class ResourceFunction {
         this.parameters = parameters;
         this.startLine = startLine;
         this.endLine = endLine;
-
-        console.log('functionName', functionName, 'parameters', parameters, 'startLine', startLine, 'endLine', endLine, 'isLocal', isLocal);
         this.isLocal = isLocal;
     }
 }

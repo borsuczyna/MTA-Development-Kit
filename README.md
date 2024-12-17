@@ -8,7 +8,7 @@
 - [ ] Global variables, e.g. `localPlayer`
 - [ ] Current file variables
 - [ ] Neighbour files global variables
-- [ ] Ctrl + click on function to go to its definition
+- [x] Ctrl + click on function to go to its definition
 - [ ] Ctrl + click on variable to go to its definition
 - [ ] Reading function definition data from comments above the function, e.g. `-- @param name: string`
 - [x] Error lens
