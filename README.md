@@ -1,4 +1,31 @@
-# Roadmap
+# MTA Development Kit for Visual Studio Code
+[![Star on GitHub](https://img.shields.io/github/stars/borsuczyna/MTA-Development-Kit.svg?style=social)](https://github.com/borsuczyna/MTA-Development-Kit/stargazers)
+
+This extension provides tools for developing MTA:SA scripts in Visual Studio Code.
+
+## Features
+- Global code snippets, e.g. `outputChatBox`
+![MTA Development Kit](https://i.imgur.com/8wk3by5.png)
+
+- Current/neighbour file function snippets
+![MTA Development Kit](https://i.imgur.com/7HbqnWG.png)
+
+- Exports manager
+![MTA Development Kit](https://i.imgur.com/qPXIOqh.png)
+
+- Exports snippets
+![MTA Development Kit](https://i.imgur.com/IlhAV04.png)
+
+- Ctrl + click on function to go to its definition
+![MTA Development Kit](https://i.imgur.com/Npc5Epc.png)
+
+- Error lens
+![MTA Development Kit](https://i.imgur.com/0Lu69V7.png)
+
+- Warning for incorrect argument count
+![MTA Development Kit](https://i.imgur.com/PtcHPyq.png)
+
+## Roadmap
 
 - [x] Global code snippets, e.g. `outputChatBox`
 - [x] Current file function snippets
@@ -20,3 +47,6 @@
 - [ ] Warnings (for example when source is used as player in trigger)
 - [ ] Trigger snippets
 - [ ] Type warnings, for example when using wrong type in function
+
+## Contributing
+Feel free to contribute to this project by creating a pull request.
