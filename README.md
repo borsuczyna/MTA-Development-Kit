@@ -6,7 +6,7 @@
 - [x] Snippets depending on script side
 - [x] Exports manager
 - [x] Exports signatures
-- [ ] Exports snippets
+- [x] Exports snippets
 - [ ] Global variables, e.g. `localPlayer`
 - [ ] Current file variables
 - [ ] Neighbour files global variables
