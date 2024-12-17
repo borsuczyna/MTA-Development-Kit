@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as vscode from 'vscode';
-import luaparse, { AssignmentStatement, CallExpression, FunctionDeclaration, IndexExpression, LocalStatement, MemberExpression, Node } from 'luaparse';
+import luaparse, { AssignmentStatement, CallExpression, Comment, FunctionDeclaration, IndexExpression, LocalStatement, MemberExpression, Node } from 'luaparse';
 import { Resource } from "./resource";
 import { ResourceFunction } from './function';
 import { FunctionParameter } from './parameter';
@@ -8,6 +8,7 @@ import { ScriptSide } from '../enums/script-side';
 import { ErrorLens } from '../error-lens/error-lens';
 import { SnippetCompletionItemProvider } from '../snippets/snippets';
 import { pathCompare } from '../utils/pathCompare';
+import { DeclarationDocumentation, readDocs } from '../docs/docs';
 
 interface ScriptError {
     line: number;
@@ -33,6 +34,7 @@ export class ResourceScript {
     private nodes: Node[] = [];
     private calls: ScriptCall[] = [];
     private errors: ScriptError[] = [];
+    private comments: Comment[] = [];
 
     constructor(parent: Resource, fullPath: string, path: string, type: ScriptSide = ScriptSide.Shared) {
         if (path.endsWith('.luac') || fullPath.endsWith('.luac')) {
@@ -69,6 +71,7 @@ export class ResourceScript {
         this.errors = [];
         
         this.loadNodes(content);
+        this.loadComments();
         this.loadFunctions();
         this.loadCalls();
         this.loadErrors();
@@ -142,6 +145,10 @@ export class ResourceScript {
         this.errors.push(...errors);
     }
 
+    private loadComments() {
+        this.comments = this.nodes.filter((node: Node) => node.type === 'Comment') as Comment[];
+    }
+
     private loadFunctions() {
         // FunctionDeclarations
         this.functions = [];
@@ -151,6 +158,7 @@ export class ResourceScript {
         for (let node of functions) {
             const functionName = (node.identifier && node.identifier.type === 'Identifier') ? node.identifier.name : 'anonymous';
             const parameters = node.parameters.map((param: any) => new FunctionParameter('any', param.name));
+            const documentation = this.readFunctionDocumentation(node.loc?.start.line ?? 0, parameters);
 
             this.functions.push(new ResourceFunction(
                 this,
@@ -158,7 +166,8 @@ export class ResourceScript {
                 parameters,
                 node.loc?.start.line,
                 node.loc?.end.line,
-                node.isLocal
+                node.isLocal,
+                documentation
             ));
         }
 
@@ -172,6 +181,7 @@ export class ResourceScript {
                     const variable = statement.variables[index];
                     const functionName = variable.type === 'Identifier' ? variable.name : 'anonymous';
                     const parameters = init.parameters.map((param: any) => new FunctionParameter('any', param.name));
+                    const documentation = this.readFunctionDocumentation(init.loc?.start.line ?? 0, parameters);
 
                     this.functions.push(new ResourceFunction(
                         this,
@@ -179,7 +189,8 @@ export class ResourceScript {
                         parameters,
                         init.loc?.start.line,
                         init.loc?.end.line,
-                        statement.type === 'LocalStatement'
+                        statement.type === 'LocalStatement',
+                        documentation
                     ));
                 }
             }
@@ -216,6 +227,7 @@ export class ResourceScript {
             if (call.base.type === 'Identifier') {
                 let identifier = call.base as any;
                 let definition = this.findFunctionInResource(identifier.name);
+
                 if (!definition) {
                     this.errors.push({
                         line: identifier.loc.start.line,
@@ -249,7 +261,16 @@ export class ResourceScript {
     }
 
     public findFunctionInResource(name: string, includeLocal: boolean = false): ResourceFunction | null {
-        return this.parent.getFunction(name, this.type, includeLocal, this.fullPath);
+        let functionDefinition = this.parent.getFunction(name, this.type, includeLocal, this.fullPath);
+        if (functionDefinition) {
+            return functionDefinition;
+        }
+
+        if (SnippetCompletionItemProvider.getFunctions(this.type).find(snippet => snippet.func.functionName === name)) {
+            return new ResourceFunction(this, name, [], null, null, false);
+        }
+
+        return null;
     }
 
     private getScriptFunctions(): string[] {
@@ -272,5 +293,71 @@ export class ResourceScript {
         return this.calls.find(call => {
             return range.start.line + 1 === call.line && range.start.character === call.column;
         }) || null;
+    }
+
+    public getCommentAtLine(line: number): Comment | null {
+        return this.comments.find(comment => comment.loc?.start.line === line) || null;
+    }
+
+    public getCommentsAboveLine(line: number): Comment[] {
+        let comment = this.getCommentAtLine(line - 1);
+        let comments: Comment[] = [];
+
+        while (comment) {
+            comments.push(comment);
+            line--;
+            comment = this.getCommentAtLine(line);
+        }
+
+        return comments.reverse();
+    }
+
+    public getCommentDocumentationAtLine(line: number): string[] {
+        let comments = this.getCommentsAboveLine(line);
+       
+        return comments.map(comment => {
+            let value = comment.value.trim();
+            if (value.startsWith('--')) {
+                return value.slice(3).trim();
+            } else {
+                return value.trim();
+            }
+        });
+    }
+
+    private readFunctionDocumentation(line: number, parameters: FunctionParameter[]): DeclarationDocumentation {
+        let comments = this.getCommentDocumentationAtLine(line);
+        let docs = readDocs(comments);
+
+        for (let [index, arg] of docs.args?.entries() ?? []) {
+            let parameter = parameters[index];
+            if (!parameter) {
+                continue;
+            }
+
+            if (arg.startsWith(parameter.name)) {
+                arg = arg.slice(parameter.name.length).trim();
+            }
+
+            if (arg.startsWith(':')) {
+                arg = arg.slice(1).trim();
+            }
+
+            if (arg.endsWith('.')) {
+                arg = arg.slice(0, -1).trim();
+            }
+
+            if (arg.split(' ').filter(a => a.length > 0).length === 1) {
+                parameter.type = arg.trim();
+            } else {
+                parameter.type = `${arg}:`;
+            }
+
+            docs.args![index] = arg;
+            parameters[index].type = parameter.type;
+            parameters[index].name = parameter.name;
+        }
+
+        return docs;
     }
 }

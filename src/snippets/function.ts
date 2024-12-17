@@ -27,7 +27,7 @@ export class FunctionSnippet {
         this.func = func;
         this.scriptSide = scriptSide;
         this.completionItem = new vscode.CompletionItem(func.functionName, vscode.CompletionItemKind.Function);
-        this.completionItem.detail = "Scriptside: " + firstLetterUppercase(this.scriptSide);
+        this.completionItem.detail = `Scriptside: ${firstLetterUppercase(this.scriptSide)}`;
 
         this.completionItem.documentation = new vscode.MarkdownString();
         this.completionItem.documentation.appendCodeblock(this.generateFunctionSnippet(func), 'mtalua');
@@ -127,9 +127,24 @@ export class FunctionSnippet {
     }
 
     public static fromResourceFunction(functionElement: ResourceFunction): FunctionSnippet {
+        let description = '';
+        let functionName = functionElement.functionName;
+
+        if (functionElement.documentation?.description) {
+            description = functionElement.documentation.description;
+        }
+
+        if (functionElement.documentation?.returns) {
+            if (functionElement.documentation.returns.split(' ').length === 0) {
+                functionName = `${functionElement.documentation.returns} = ${functionName}`;
+            } else {
+                description += '\n\nReturns: ' + functionElement.documentation.returns;
+            }
+        }
+        
         return new FunctionSnippet({
-            functionName: functionElement.functionName,
-            description: '',
+            functionName: functionName,
+            description: description.trim(),
             returnValues: [],
             requiredArguments: functionElement.parameters.map(param => ({
                 type: param.type === 'any' ? '' : param.type,

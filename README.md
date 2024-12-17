@@ -16,3 +16,4 @@
 - [ ] Errors for using unknown variable
 - [ ] Warnings (for example when source is used as player in trigger)
 - [ ] Trigger snippets
+- [ ] Type warnings, for example when using wrong type in function
