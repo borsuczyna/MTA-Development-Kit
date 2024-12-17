@@ -53,8 +53,12 @@ export class Resource {
         return this.exports;
     }
 
-    public getExport(name: string): ResourceExport | null {
-        return this.exports.find(exp => exp.functionName === name) || null;
+    public getExport(name: string, side: ScriptSide = ScriptSide.Shared): ResourceExport | null {
+        if (side === ScriptSide.Shared) {
+            return this.exports.find(exp => exp.functionName === name) || null;
+        }
+
+        return this.exports.find(exp => exp.functionName === name && exp.type === side) || null;
     }
 
     private async loadScripts(scriptNodes: HTMLCollectionOf<Element>) {
@@ -126,10 +130,6 @@ export class Resource {
             vscode.window.showErrorMessage(`Error loading meta.xml: ${errorMessage}`);
             vscode.window.showErrorMessage(`Stack: ${(error as Error).stack}`);
         }
-    }
-
-    public getExportByName(name: string): ResourceExport | null {
-        return this.exports.find(exportItem => exportItem.functionName === name) || null;
     }
 
     public static async getResources(): Promise<Resource[]> {

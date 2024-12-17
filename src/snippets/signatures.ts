@@ -47,6 +47,7 @@ export class SignatureHelpProvider implements vscode.SignatureHelpProvider {
         const functionName = functionCallMatch[0].replace(/\s*\($/, '');
         const textBeforeFunctionCall = lineText.substring(0, functionCallMatchPosition);
         const exportMatch = textBeforeFunctionCall.match(/exports\[(?:'|")(.*?)(?:'|")\]:/);
+        const activeScript = Resource.getActiveScriptCached();
         
         if (exportMatch) {
             const exportsString = exportMatch[0];
@@ -59,7 +60,7 @@ export class SignatureHelpProvider implements vscode.SignatureHelpProvider {
                     return null;
                 }
 
-                let resourceExports = resource.getExport(functionName);
+                let resourceExports = resource.getExport(functionName, activeScript ? activeScript.type : ScriptSide.Shared);
                 if (!resourceExports || !resourceExports.functionReference) {
                     return null;
                 }
@@ -81,7 +82,6 @@ export class SignatureHelpProvider implements vscode.SignatureHelpProvider {
             }
         }
 
-        let activeScript = Resource.getActiveScriptCached();
         let snippets = this.snippets;
 
         // Neighbour script snippets

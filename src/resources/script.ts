@@ -236,7 +236,6 @@ export class ResourceScript {
                 let functionName = '';
                 let range: vscode.Range | null = null;
 
-                // @TODO: Add exports
                 let isExport = this.isExportCall(call);
                 if (isExport) { 
                     _arguments = call.arguments;
@@ -246,7 +245,7 @@ export class ResourceScript {
                     range = location ? new vscode.Range(location.start.line - 1, location.start.column, location.end.line - 1, location.end.column) : null;
 
                     if (resource) {
-                        let exportDefinition = resource.getExportByName(functionName);
+                        let exportDefinition = resource.getExport(functionName, this.type);
                         if (exportDefinition) {
                             definition = resource.getFunction(functionName, this.type, false);
                         } else {
