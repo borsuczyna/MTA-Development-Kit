@@ -11,6 +11,7 @@
 - [ ] Ctrl + click on function to go to its definition
 - [ ] Ctrl + click on variable to go to its definition
 - [ ] Reading function definition data from comments above the function, e.g. `-- @param name: string`
-- [ ] Error lens
+- [x] Error lens
+- [ ] Errors for calling unknown function
 - [ ] Warnings (for example when source is used as player in trigger)
 - [ ] Trigger snippets
