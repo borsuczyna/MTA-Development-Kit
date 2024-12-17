@@ -4,25 +4,25 @@
 This extension provides tools for developing MTA:SA scripts in Visual Studio Code.
 
 ## Features
-- Global code snippets, e.g. `outputChatBox`
+- Global code snippets, e.g. `outputChatBox`<br />
 ![MTA Development Kit](https://i.imgur.com/8wk3by5.png)
 
-- Current/neighbour file function snippets
+- Current/neighbour file function snippets<br />
 ![MTA Development Kit](https://i.imgur.com/7HbqnWG.png)
 
-- Exports manager
+- Exports manager<br />
 ![MTA Development Kit](https://i.imgur.com/qPXIOqh.png)
 
-- Exports snippets
+- Exports snippets<br />
 ![MTA Development Kit](https://i.imgur.com/IlhAV04.png)
 
-- Ctrl + click on function to go to its definition
+- Ctrl + click on function to go to its definition<br />
 ![MTA Development Kit](https://i.imgur.com/Npc5Epc.png)
 
-- Error lens
+- Error lens<br />
 ![MTA Development Kit](https://i.imgur.com/0Lu69V7.png)
 
-- Warning for incorrect argument count
+- Warning for incorrect argument count<br />
 ![MTA Development Kit](https://i.imgur.com/PtcHPyq.png)
 
 ## Roadmap
