@@ -131,10 +131,9 @@ export class ResourceScript {
     }
 
     private loadFunctions() {
-        let functions = this.nodes.filter((node: Node) => node.type === 'FunctionDeclaration');
+        let functions = this.nodes.filter((node: Node) => node.type === 'FunctionDeclaration') as FunctionDeclaration[];
 
-        this.functions = functions.map((node: Node) => {
-            node = node as FunctionDeclaration;
+        this.functions = functions.map((node: FunctionDeclaration) => {
             if (node === null) {
                 return null;
             }
