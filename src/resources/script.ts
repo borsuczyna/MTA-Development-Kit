@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import luaparse, { Node } from 'luaparse';
+import luaparse, { FunctionDeclaration, Node } from 'luaparse';
 import { Resource } from "./resource";
 import { ResourceFunction } from './function';
 import { FunctionParameter } from './parameter';
@@ -12,6 +12,7 @@ export class ResourceScript {
     public type: ScriptSide = ScriptSide.Shared;
     public functions: ResourceFunction[] = [];
     public compiled: boolean = false;
+    private nodes: Node[] = [];
 
     constructor(parent: Resource, fullPath: string, path: string, type: ScriptSide = ScriptSide.Shared) {
         if (path.endsWith('.luac') || fullPath.endsWith('.luac')) {
@@ -45,7 +46,8 @@ export class ResourceScript {
     }
 
     public setCode(content: string) {
-        this.loadFunctions(content);
+        this.loadNodes(content);
+        this.loadFunctions();
     }
 
     private forceParse(code: string): Node[] {
@@ -74,16 +76,24 @@ export class ResourceScript {
         return nodes;
     }
 
-    private loadFunctions(content: string) {
-        let nodes = this.forceParse(content);
-        let functions = nodes.filter((node: any) => node.type === 'FunctionDeclaration');
+    private loadNodes(content: string) {
+        this.nodes = this.forceParse(content);
+    }
 
-        this.functions = functions.map((node: any) => {
-            const functionName = node.identifier.name;
+    private loadFunctions() {
+        let functions = this.nodes.filter((node: Node) => node.type === 'FunctionDeclaration');
+
+        this.functions = functions.map((node: Node) => {
+            node = node as FunctionDeclaration;
+            if (node === null) {
+                return null;
+            }
+
+            const functionName = (node.identifier && node.identifier.type === 'Identifier') ? node.identifier.name : 'anonymous';
             const parameters = node.parameters.map((param: any) => new FunctionParameter('any', param.name));
 
-            return new ResourceFunction(this, functionName, parameters, node.loc.start.line, node.loc.end.line);
-        });
+            return new ResourceFunction(this, functionName, parameters, node.loc?.start.line, node.loc?.end.line);
+        }).filter((func): func is ResourceFunction => func !== null);
     }
 
     public getFunction(name: string): ResourceFunction | null {

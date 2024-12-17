@@ -107,6 +107,7 @@ export class Resource {
         } catch (error) {
             const errorMessage = (error as Error).message;
             vscode.window.showErrorMessage(`Error loading meta.xml: ${errorMessage}`);
+            vscode.window.showErrorMessage(`Stack: ${(error as Error).stack}`);
         }
     }
 

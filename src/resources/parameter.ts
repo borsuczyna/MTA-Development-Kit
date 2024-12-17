@@ -3,8 +3,8 @@ export class FunctionParameter {
     public name: string;
 
     constructor(type: string, name: string) {
-        this.type = type.trim();
-        this.name = name.trim();
+        this.type = (type ?? '').trim();
+        this.name = (name ?? '').trim();
     }
     
     public toString(): string {
