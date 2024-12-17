@@ -4,6 +4,7 @@ import { ResourceExport } from './resources/export';
 import { SnippetCompletionItemProvider } from './snippets/snippets';
 import { SignatureHelpProvider } from './snippets/signatures';
 import { FunctionDefinitionProvider } from './definitions/function';
+import { ErrorLens } from './error-lens/error-lens';
 
 function activate(context: vscode.ExtensionContext) {
     let disposables = ResourceExport.registerCommands(context);
@@ -18,11 +19,12 @@ function activate(context: vscode.ExtensionContext) {
         new SignatureHelpProvider(), '(', ')', ',', ' '
     ));
 
-    // test
     context.subscriptions.push(vscode.languages.registerDefinitionProvider(
         { language: 'mtalua' },
         new FunctionDefinitionProvider()
     ));
+
+    context.subscriptions.push(ErrorLens.activate());
 
     const resourceTreeProvider = new ResourceTreeProvider();
     vscode.window.registerTreeDataProvider('exportsView', resourceTreeProvider);

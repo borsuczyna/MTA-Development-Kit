@@ -1,9 +1,18 @@
 import * as fs from 'fs';
+import * as vscode from 'vscode';
 import luaparse, { FunctionDeclaration, Node } from 'luaparse';
 import { Resource } from "./resource";
 import { ResourceFunction } from './function';
 import { FunctionParameter } from './parameter';
 import { ScriptSide } from '../enums/script-side';
+import { ErrorLens } from '../error-lens/error-lens';
+
+interface ScriptError {
+    line: number;
+    column: number;
+    lineLength?: number;
+    message: string;
+}
 
 export class ResourceScript {
     public parent: Resource;
@@ -13,6 +22,7 @@ export class ResourceScript {
     public functions: ResourceFunction[] = [];
     public compiled: boolean = false;
     private nodes: Node[] = [];
+    private errors: ScriptError[] = [];
 
     constructor(parent: Resource, fullPath: string, path: string, type: ScriptSide = ScriptSide.Shared) {
         if (path.endsWith('.luac') || fullPath.endsWith('.luac')) {
@@ -50,10 +60,12 @@ export class ResourceScript {
         this.loadFunctions();
     }
 
-    private forceParse(code: string): Node[] {
+    private forceParse(code: string): { nodes: Node[]; errors: ScriptError[] } {
         let linesLeft: string[] = code.split('\n');
         let nodes: Node[] = [];
-        
+        let errors: ScriptError[] = [];
+        let currentLineOffset = 0;
+    
         while (linesLeft.length > 0) {
             let codeToParse = linesLeft.join('\n');
             try {
@@ -63,21 +75,61 @@ export class ResourceScript {
                         nodes.push(node);
                     }
                 });
-
+    
                 linesLeft = [];
             } catch (error: any) {
-                // console.error('Error parsing script at line', error.line, linesLeft[error.line-1]);
+                let lineLength = 0;
+                
+                if (error.line) {
+                    let line = linesLeft[error.line - 1];
+                    lineLength = line.length;
+                }
 
-                const line = (error.line ? Math.max(1, error.line - 1) : null) ?? linesLeft.length;
-                linesLeft = linesLeft.slice(line);
+                const errorLine = error.line ? currentLineOffset + error.line : currentLineOffset + linesLeft.length;
+                let column = error.column ?? 1;
+                let message = error.message ?? 'Unknown error';
+
+                if (error.message.startsWith('[')) {
+                    let endBracket = error.message.indexOf(']');
+                    if (endBracket !== -1) {
+                        message = error.message.slice(endBracket + 1).trim();
+                    }
+                }
+
+                errors.push({
+                    line: errorLine,
+                    column,
+                    lineLength,
+                    message
+                });
+    
+                const problematicLine = error.line ? Math.max(1, error.line - 1) : 1;
+                currentLineOffset += problematicLine;
+                linesLeft = linesLeft.slice(problematicLine);
             }
         }
 
-        return nodes;
+        // remove duplicate errors on same line
+        errors = errors.filter((error, index, self) => index === self.findIndex((t) => t.line === error.line));
+    
+        return { nodes, errors };
     }
 
     private loadNodes(content: string) {
-        this.nodes = this.forceParse(content);
+        let { nodes, errors } = this.forceParse(content);
+
+        this.nodes = nodes;
+        this.errors = errors;
+
+        console.log('errors', this.errors);
+
+        let uri = vscode.Uri.file(this.fullPath);
+        ErrorLens.setErrors(uri, this.errors.map(error => {
+            return {
+                range: new vscode.Range(error.line - 1, 0, error.line - 1, error.lineLength ?? 0),
+                message: error.message
+            };
+        }));
     }
 
     private loadFunctions() {
