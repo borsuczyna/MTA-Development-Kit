@@ -25,6 +25,9 @@ This extension provides tools for developing MTA:SA scripts in Visual Studio Cod
 - Warning for incorrect argument count<br />
 ![MTA Development Kit](https://i.imgur.com/PtcHPyq.png)
 
+- Type warnings, for example when using wrong type in function<br />
+![MTA Development Kit](https://i.imgur.com/jxgk2ky.png)
+
 ## Roadmap
 
 - [x] Global code snippets, e.g. `outputChatBox`
