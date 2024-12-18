@@ -40,7 +40,7 @@ export class Resource {
     }
 
     public getFunction(name: string, type: ScriptSide | null, includeLocal: boolean = false, localParent: string | null = null): ResourceFunction | null {
-        let possibleScripts = (type && type !== ScriptSide.Shared) ? this.scripts.filter(script => script.type === type) : this.scripts;
+        let possibleScripts = (type && type !== ScriptSide.Shared) ? this.scripts.filter(script => script.type === type || script.type === ScriptSide.Shared) : this.scripts;
 
         for (const script of possibleScripts) {
             let functionItem = script.getFunction(name, includeLocal, localParent);
@@ -66,7 +66,7 @@ export class Resource {
             return this.exports.find(exp => exp.functionName === name) || null;
         }
 
-        return this.exports.find(exp => exp.functionName === name && exp.type === side) || null;
+        return this.exports.find(exp => exp.functionName === name && (exp.type === side || exp.type === ScriptSide.Shared)) || null;
     }
 
     private async loadScripts(scriptNodes: HTMLCollectionOf<Element>) {
