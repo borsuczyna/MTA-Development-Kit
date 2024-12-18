@@ -9,12 +9,9 @@ import { ErrorLens } from '../error-lens/error-lens';
 import { SnippetCompletionItemProvider } from '../snippets/snippets';
 import { pathCompare } from '../utils/pathCompare';
 import { DeclarationDocumentation, readDocs } from '../docs/docs';
+import { ArgumentTypes } from './argument-types';
 
 interface ScriptError {
-    // startLine: number;
-    // startColumn: number;
-    // endLine: number;
-    // endColumn: number;
     range: vscode.Range;
     message: string;
     type: vscode.DiagnosticSeverity;
@@ -24,6 +21,14 @@ interface ScriptCall {
     functionName: string;
     line: number;
     column: number;
+    definition: ResourceFunction | null;
+}
+
+interface CallDetails {
+    functionName: string;
+    line: number;
+    column: number;
+    range: vscode.Range;
     definition: ResourceFunction | null;
 }
 
@@ -223,91 +228,116 @@ export class ResourceScript {
         return null;
     }
 
+    public getCallDetails(call: CallExpression): CallDetails | undefined {
+        if (call.base.type !== 'Identifier' && call.base.type !== 'MemberExpression') {
+            return;
+        }
+
+        let identifier = call.base as Identifier | MemberExpression;
+        let definition: ResourceFunction | null = null;
+        let _arguments: Expression[] = [];
+        let functionName = '';
+        let range: vscode.Range | null = null;
+
+        let isExport = this.isExportCall(call);
+        if (isExport) { 
+            _arguments = call.arguments;
+            functionName = (call.base as any as MemberExpression).identifier.name;
+            let resource = Resource.getResourceByName(isExport);
+            let location = (call.base as any as MemberExpression).identifier.loc;
+            range = location ? new vscode.Range(location.start.line - 1, location.start.column, location.end.line - 1, location.end.column) : null;
+
+            if (resource) {
+                let exportDefinition = resource.getExport(functionName, this.type);
+                if (exportDefinition) {
+                    definition = resource.getFunction(functionName, this.type, false);
+                } else {
+                    if (!range) {
+                        return;
+                    }
+
+                    this.errors.push({
+                        range: range,
+                        message: `Function '${functionName}' is not exported in resource '${isExport}', make sure it's added to the exports in meta.xml`,
+                        type: vscode.DiagnosticSeverity.Error
+                    });
+
+                    return;
+                }
+            }
+        } else {
+            _arguments = call.arguments;
+            functionName = (identifier as Identifier).name;
+            definition = this.findFunctionInResource(functionName);
+            range = identifier.loc ? new vscode.Range(identifier.loc.start.line - 1, identifier.loc.start.column, identifier.loc.end.line - 1, identifier.loc.end.column) : null;
+        }
+
+        if (!functionName) {
+            return;
+        }
+
+        if (!range) {
+            return;
+        }
+
+        return {
+            functionName: functionName,
+            line: range.start.line + 1,
+            column: range.start.character,
+            range: range,
+            definition,
+        };
+    }
+
     private loadCalls() {
         let calls = this.nodes.filter((node: Node) => node.type === 'CallExpression') as CallExpression[];
         this.calls = [];
 
         for (let call of calls) {
-            // if script function does not exist, add error
-            if (call.base.type === 'Identifier' || call.base.type === 'MemberExpression') {
-                let identifier = call.base as Identifier | MemberExpression;
-                let definition: ResourceFunction | null = null;
-                let _arguments: Expression[] = [];
-                let functionName = '';
-                let range: vscode.Range | null = null;
+            let details = this.getCallDetails(call);
+            if (details) {
+                this.calls.push(details);
 
-                let isExport = this.isExportCall(call);
-                if (isExport) { 
-                    _arguments = call.arguments;
-                    functionName = (call.base as any as MemberExpression).identifier.name;
-                    let resource = Resource.getResourceByName(isExport);
-                    let location = (call.base as any as MemberExpression).identifier.loc;
-                    range = location ? new vscode.Range(location.start.line - 1, location.start.column, location.end.line - 1, location.end.column) : null;
-
-                    if (resource) {
-                        let exportDefinition = resource.getExport(functionName, this.type);
-                        if (exportDefinition) {
-                            definition = resource.getFunction(functionName, this.type, false);
-                        } else {
-                            if (!range) {
-                                continue;
-                            }
-
-                            this.errors.push({
-                                range: range,
-                                message: `Function '${functionName}' is not exported in resource '${isExport}', make sure it's added to the exports in meta.xml`,
-                                type: vscode.DiagnosticSeverity.Error
-                            });
-
-                            continue;
-                        }
-                    }
-                } else {
-                    _arguments = call.arguments;
-                    functionName = (identifier as Identifier).name;
-                    definition = this.findFunctionInResource(functionName);
-                    range = identifier.loc ? new vscode.Range(identifier.loc.start.line - 1, identifier.loc.start.column, identifier.loc.end.line - 1, identifier.loc.end.column) : null;
-                }
-
-                if (!range) {
-                    continue;
-                }
-
-                // if function is not defined in script
-                if (!definition) {
+                if (!details.definition) {
                     this.errors.push({
-                        range: range,
-                        message: `Function '${functionName}' is not defined`,
+                        range: new vscode.Range(details.line - 1, details.column, details.line - 1, details.column + details.functionName.length),
+                        message: `Function '${details.functionName}' is not defined`,
                         type: vscode.DiagnosticSeverity.Warning
                     });
                 } else {
                     // if argument count is wrong
-                    if (call.arguments.length < definition.requiredParameters.length) {
-                        let atLeast = definition.requiredParameters.length !== definition.parameters.length ? 'at least ' : '';
-                        let argumentsForm = definition.requiredParameters.length === 1 ? 'argument' : 'arguments';
+                    if (call.arguments.length < details.definition.requiredParameters.length) {
+                        let atLeast = details.definition.requiredParameters.length !== details.definition.parameters.length ? 'at least ' : '';
+                        let argumentsForm = details.definition.requiredParameters.length === 1 ? 'argument' : 'arguments';
 
                         this.errors.push({
-                            range: range,
-                            message: `Function '${functionName}' expects ${atLeast}${definition.requiredParameters.length} ${argumentsForm}, got ${call.arguments.length}`,
+                            range: new vscode.Range(details.line - 1, details.column, details.line - 1, details.column + details.functionName.length),
+                            message: `Function '${details.functionName}' expects ${atLeast}${details.definition.requiredParameters.length} ${argumentsForm}, got ${call.arguments.length}`,
                             type: vscode.DiagnosticSeverity.Warning
                         });
-                    } else if (call.arguments.length > definition.parameters.length) {
-                        let argumentsForm = definition.parameters.length === 1 ? 'argument' : 'arguments';
+                    } else if (call.arguments.length > details.definition.parameters.length) {
+                        let argumentsForm = details.definition.parameters.length === 1 ? 'argument' : 'arguments';
 
                         this.errors.push({
-                            range: range,
-                            message: `Function '${functionName}' expects ${definition.parameters.length} ${argumentsForm}, got ${call.arguments.length}`,
+                            range: new vscode.Range(details.line - 1, details.column, details.line - 1, details.column + details.functionName.length),
+                            message: `Function '${details.functionName}' expects ${details.definition.parameters.length} ${argumentsForm}, got ${call.arguments.length}`,
                             type: vscode.DiagnosticSeverity.Warning
                         });
+                    } else {
+                        let { message, argument } = ArgumentTypes.checkArgumentTypes(call.arguments, details.definition.parameters, this);
+                        if (argument) {
+                            // get argument range
+                            let location = argument.loc;
+                            let argumentRange = location ? new vscode.Range(location.start.line - 1, location.start.column, location.end.line - 1, location.end.column) : details.range;
+
+                            this.errors.push({
+                                range: argumentRange,
+                                message: message,
+                                type: vscode.DiagnosticSeverity.Warning
+                            });
+                        }
                     }
                 }
-
-                this.calls.push({
-                    functionName: functionName,
-                    line: range.start.line + 1,
-                    column: range.start.character,
-                    definition
-                });
             }
         }
     }

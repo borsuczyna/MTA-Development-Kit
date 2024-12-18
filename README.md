@@ -44,9 +44,8 @@ This extension provides tools for developing MTA:SA scripts in Visual Studio Cod
 - [x] Warning for calling unknown function
 - [ ] Warning for using unknown variable
 - [x] Warning for incorrect argument count
-- [ ] Warnings (for example when source is used as player in trigger)
 - [ ] Trigger snippets
-- [ ] Type warnings, for example when using wrong type in function
+- [x] Type warnings, for example when using wrong type in function
 
 ## Contributing
 Feel free to contribute to this project by creating a pull request.

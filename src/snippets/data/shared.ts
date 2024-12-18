@@ -11857,5 +11857,1111 @@ export const sharedSnippets: Function[] = [
             }
         ],
         "optionalArguments": []
+    },
+
+    // default lua functions
+    {
+        "functionName": "assert",
+        "description": "This function checks whether a condition is true. If the condition is false, it raises an error with an optional error message.",
+        "returnValues": [
+            "value or raises error"
+        ],
+        "requiredArguments": [
+            {
+                "type": "any",
+                "name": "condition",
+                "default": null
+            }
+        ],
+        "optionalArguments": [
+            {
+                "type": "string",
+                "name": "errorMessage",
+                "default": "nil"
+            }
+        ]
+    },
+    {
+        "functionName": "setmetatable",
+        "description": "This function sets the metatable for a given table.",
+        "returnValues": [
+            "table"
+        ],
+        "requiredArguments": [
+            {
+                "type": "table",
+                "name": "table",
+                "default": null
+            },
+            {
+                "type": "table or nil",
+                "name": "metatable",
+                "default": null
+            }
+        ],
+        "optionalArguments": []
+    },
+    {
+        "functionName": "getmetatable",
+        "description": "This function retrieves the metatable of a given table.",
+        "returnValues": [
+            "table or nil"
+        ],
+        "requiredArguments": [
+            {
+                "type": "table",
+                "name": "table",
+                "default": null
+            }
+        ],
+        "optionalArguments": []
+    },
+    {
+        "functionName": "pairs",
+        "description": "This function returns an iterator function that allows iteration over all key-value pairs in a table.",
+        "returnValues": [
+            "function, table, nil"
+        ],
+        "requiredArguments": [
+            {
+                "type": "table",
+                "name": "table",
+                "default": null
+            }
+        ],
+        "optionalArguments": []
+    },
+    {
+        "functionName": "ipairs",
+        "description": "This function returns an iterator function that allows iteration over array-like tables (numerical indices).",
+        "returnValues": [
+            "function, table, 0"
+        ],
+        "requiredArguments": [
+            {
+                "type": "table",
+                "name": "table",
+                "default": null
+            }
+        ],
+        "optionalArguments": []
+    },
+    {
+        "functionName": "tonumber",
+        "description": "This function converts its argument to a number if possible.",
+        "returnValues": [
+            "number or nil"
+        ],
+        "requiredArguments": [
+            {
+                "type": "any",
+                "name": "value",
+                "default": null
+            }
+        ],
+        "optionalArguments": [
+            {
+                "type": "integer",
+                "name": "base",
+                "default": "nil"
+            }
+        ]
+    },
+    {
+        "functionName": "tostring",
+        "description": "This function converts its argument to a string.",
+        "returnValues": [
+            "string"
+        ],
+        "requiredArguments": [
+            {
+                "type": "any",
+                "name": "value",
+                "default": null
+            }
+        ],
+        "optionalArguments": []
+    },
+    {
+        "functionName": "type",
+        "description": "This function returns the type of the given value as a string.",
+        "returnValues": [
+            "string"
+        ],
+        "requiredArguments": [
+            {
+                "type": "any",
+                "name": "value",
+                "default": null
+            }
+        ],
+        "optionalArguments": []
+    },
+    {
+        "functionName": "pcall",
+        "description": "This function calls a function in protected mode, catching any errors and returning a success flag and the function result.",
+        "returnValues": [
+            "bool, result or error"
+        ],
+        "requiredArguments": [
+            {
+                "type": "function",
+                "name": "function",
+                "default": null
+            }
+        ],
+        "optionalArguments": [
+            {
+                "type": "any",
+                "name": "arguments",
+                "default": "nil"
+            }
+        ]
+    },
+    {
+        "functionName": "xpcall",
+        "description": "This function calls a function in protected mode with a custom error handler.",
+        "returnValues": [
+            "bool, result or error"
+        ],
+        "requiredArguments": [
+            {
+                "type": "function",
+                "name": "function",
+                "default": null
+            },
+            {
+                "type": "function",
+                "name": "errorHandler",
+                "default": null
+            }
+        ],
+        "optionalArguments": []
+    },
+    {
+        "functionName": "string.byte",
+        "description": "Returns the internal numerical codes of the characters in a string.",
+        "returnValues": [
+            "number", 
+            "nil"
+        ],
+        "requiredArguments": [
+            {
+                "type": "string",
+                "name": "s",
+                "default": null
+            }
+        ],
+        "optionalArguments": [
+            {
+                "type": "number",
+                "name": "i",
+                "default": "1"
+            },
+            {
+                "type": "number",
+                "name": "j",
+                "default": "i"
+            }
+        ]
+    },
+    {
+        "functionName": "string.char",
+        "description": "Returns a string with the characters corresponding to the given character codes.",
+        "returnValues": [
+            "string"
+        ],
+        "requiredArguments": [
+            {
+                "type": "number",
+                "name": "charCode",
+                "default": null
+            }
+        ],
+        "optionalArguments": []
+    },
+    {
+        "functionName": "string.find",
+        "description": "Looks for the first occurrence of a pattern in a string and returns the start and end indices of the match.",
+        "returnValues": [
+            "number",
+            "number",
+            "nil"
+        ],
+        "requiredArguments": [
+            {
+                "type": "string",
+                "name": "s",
+                "default": null
+            },
+            {
+                "type": "string",
+                "name": "pattern",
+                "default": null
+            }
+        ],
+        "optionalArguments": [
+            {
+                "type": "number",
+                "name": "init",
+                "default": "1"
+            },
+            {
+                "type": "bool",
+                "name": "plain",
+                "default": "false"
+            }
+        ]
+    },
+    {
+        "functionName": "string.format",
+        "description": "Returns a formatted string, similar to printf in C.",
+        "returnValues": [
+            "string"
+        ],
+        "requiredArguments": [
+            {
+                "type": "string",
+                "name": "formatString",
+                "default": null
+            }
+        ],
+        "optionalArguments": [
+            {
+                "type": "any",
+                "name": "...",
+                "default": null
+            }
+        ]
+    },
+    {
+        "functionName": "string.gmatch",
+        "description": "Returns an iterator function that, each time it is called, returns the next captures from the pattern in the string.",
+        "returnValues": [
+            "function"
+        ],
+        "requiredArguments": [
+            {
+                "type": "string",
+                "name": "s",
+                "default": null
+            },
+            {
+                "type": "string",
+                "name": "pattern",
+                "default": null
+            }
+        ],
+        "optionalArguments": []
+    },
+    {
+        "functionName": "string.gsub",
+        "description": "Returns a copy of the string with all occurrences of the pattern replaced by a replacement string or function.",
+        "returnValues": [
+            "string",
+            "number"
+        ],
+        "requiredArguments": [
+            {
+                "type": "string",
+                "name": "s",
+                "default": null
+            },
+            {
+                "type": "string",
+                "name": "pattern",
+                "default": null
+            },
+            {
+                "type": "string|function",
+                "name": "repl",
+                "default": null
+            }
+        ],
+        "optionalArguments": [
+            {
+                "type": "number",
+                "name": "n",
+                "default": "0"
+            }
+        ]
+    },
+    {
+        "functionName": "string.len",
+        "description": "Returns the length of a string.",
+        "returnValues": [
+            "number"
+        ],
+        "requiredArguments": [
+            {
+                "type": "string",
+                "name": "s",
+                "default": null
+            }
+        ],
+        "optionalArguments": []
+    },
+    {
+        "functionName": "string.lower",
+        "description": "Returns a copy of the string with all uppercase letters converted to lowercase.",
+        "returnValues": [
+            "string"
+        ],
+        "requiredArguments": [
+            {
+                "type": "string",
+                "name": "s",
+                "default": null
+            }
+        ],
+        "optionalArguments": []
+    },
+    {
+        "functionName": "string.match",
+        "description": "Looks for the first match of a pattern in a string and returns the captures.",
+        "returnValues": [
+            "string",
+            "nil"
+        ],
+        "requiredArguments": [
+            {
+                "type": "string",
+                "name": "s",
+                "default": null
+            },
+            {
+                "type": "string",
+                "name": "pattern",
+                "default": null
+            }
+        ],
+        "optionalArguments": [
+            {
+                "type": "number",
+                "name": "init",
+                "default": "1"
+            }
+        ]
+    },
+    {
+        "functionName": "string.rep",
+        "description": "Returns a string consisting of the input string repeated n times.",
+        "returnValues": [
+            "string"
+        ],
+        "requiredArguments": [
+            {
+                "type": "string",
+                "name": "s",
+                "default": null
+            },
+            {
+                "type": "number",
+                "name": "n",
+                "default": null
+            }
+        ],
+        "optionalArguments": [
+            {
+                "type": "string",
+                "name": "sep",
+                "default": "''"
+            }
+        ]
+    },
+    {
+        "functionName": "string.reverse",
+        "description": "Returns a copy of the string with its characters in reverse order.",
+        "returnValues": [
+            "string"
+        ],
+        "requiredArguments": [
+            {
+                "type": "string",
+                "name": "s",
+                "default": null
+            }
+        ],
+        "optionalArguments": []
+    },
+    {
+        "functionName": "string.sub",
+        "description": "Returns the substring of a string between the specified indices.",
+        "returnValues": [
+            "string"
+        ],
+        "requiredArguments": [
+            {
+                "type": "string",
+                "name": "s",
+                "default": null
+            },
+            {
+                "type": "number",
+                "name": "i",
+                "default": null
+            }
+        ],
+        "optionalArguments": [
+            {
+                "type": "number",
+                "name": "j",
+                "default": "-1"
+            }
+        ]
+    },
+    {
+        "functionName": "string.upper",
+        "description": "Returns a copy of the string with all lowercase letters converted to uppercase.",
+        "returnValues": [
+            "string"
+        ],
+        "requiredArguments": [
+            {
+                "type": "string",
+                "name": "s",
+                "default": null
+            }
+        ],
+        "optionalArguments": []
+    },
+    {
+        "functionName": "table.concat",
+        "description": "Concatenates the elements of a table into a string, with an optional separator and range.",
+        "returnValues": [
+            "string"
+        ],
+        "requiredArguments": [
+            {
+                "type": "table",
+                "name": "table",
+                "default": null
+            }
+        ],
+        "optionalArguments": [
+            {
+                "type": "string",
+                "name": "separator",
+                "default": "\"\""
+            },
+            {
+                "type": "number",
+                "name": "startIndex",
+                "default": "1"
+            },
+            {
+                "type": "number",
+                "name": "endIndex",
+                "default": null
+            }
+        ]
+    },
+    {
+        "functionName": "table.insert",
+        "description": "Inserts a value into a table at the specified position.",
+        "returnValues": [],
+        "requiredArguments": [
+            {
+                "type": "table",
+                "name": "table",
+                "default": null
+            },
+            {
+                "type": "any",
+                "name": "value",
+                "default": null
+            }
+        ],
+        "optionalArguments": [
+            {
+                "type": "number",
+                "name": "position",
+                "default": null
+            }
+        ]
+    },
+    {
+        "functionName": "table.remove",
+        "description": "Removes an element from a table at the specified position and returns the removed element.",
+        "returnValues": [
+            "any"
+        ],
+        "requiredArguments": [
+            {
+                "type": "table",
+                "name": "table",
+                "default": null
+            }
+        ],
+        "optionalArguments": [
+            {
+                "type": "number",
+                "name": "position",
+                "default": null
+            }
+        ]
+    },
+    {
+        "functionName": "table.sort",
+        "description": "Sorts a table in-place using an optional comparison function.",
+        "returnValues": [],
+        "requiredArguments": [
+            {
+                "type": "table",
+                "name": "table",
+                "default": null
+            }
+        ],
+        "optionalArguments": [
+            {
+                "type": "function",
+                "name": "comparisonFunction",
+                "default": null
+            }
+        ]
+    },
+    {
+        "functionName": "table.unpack",
+        "description": "Returns the elements from a table as individual values.",
+        "returnValues": [
+            "multiple"
+        ],
+        "requiredArguments": [
+            {
+                "type": "table",
+                "name": "table",
+                "default": null
+            }
+        ],
+        "optionalArguments": [
+            {
+                "type": "number",
+                "name": "startIndex",
+                "default": "1"
+            },
+            {
+                "type": "number",
+                "name": "endIndex",
+                "default": null
+            }
+        ]
+    },
+    {
+        "functionName": "math.abs",
+        "description": "Returns the absolute value of a given number.",
+        "returnValues": [
+            "number"
+        ],
+        "requiredArguments": [
+            {
+                "type": "number",
+                "name": "value",
+                "default": null
+            }
+        ],
+        "optionalArguments": []
+    },
+    {
+        "functionName": "math.ceil",
+        "description": "Rounds a given number upwards to the nearest integer.",
+        "returnValues": [
+            "number"
+        ],
+        "requiredArguments": [
+            {
+                "type": "number",
+                "name": "value",
+                "default": null
+            }
+        ],
+        "optionalArguments": []
+    },
+    {
+        "functionName": "math.floor",
+        "description": "Rounds a given number downwards to the nearest integer.",
+        "returnValues": [
+            "number"
+        ],
+        "requiredArguments": [
+            {
+                "type": "number",
+                "name": "value",
+                "default": null
+            }
+        ],
+        "optionalArguments": []
+    },
+    {
+        "functionName": "math.max",
+        "description": "Returns the largest value among the given arguments.",
+        "returnValues": [
+            "number"
+        ],
+        "requiredArguments": [
+            {
+                "type": "number",
+                "name": "value1",
+                "default": null
+            },
+            {
+                "type": "number",
+                "name": "value2",
+                "default": null
+            }
+        ],
+        "optionalArguments": [
+            {
+                "type": "number",
+                "name": "additionalValues",
+                "default": null
+            }
+        ]
+    },
+    {
+        "functionName": "math.min",
+        "description": "Returns the smallest value among the given arguments.",
+        "returnValues": [
+            "number"
+        ],
+        "requiredArguments": [
+            {
+                "type": "number",
+                "name": "value1",
+                "default": null
+            },
+            {
+                "type": "number",
+                "name": "value2",
+                "default": null
+            }
+        ],
+        "optionalArguments": [
+            {
+                "type": "number",
+                "name": "additionalValues",
+                "default": null
+            }
+        ]
+    },
+    {
+        "functionName": "math.random",
+        "description": "Generates a random number within a given range. If no arguments are provided, returns a random number between 0 and 1.",
+        "returnValues": [
+            "number"
+        ],
+        "requiredArguments": [],
+        "optionalArguments": [
+            {
+                "type": "number",
+                "name": "lowerBound",
+                "default": null
+            },
+            {
+                "type": "number",
+                "name": "upperBound",
+                "default": null
+            }
+        ]
+    },
+    {
+        "functionName": "math.sqrt",
+        "description": "Returns the square root of a given number.",
+        "returnValues": [
+            "number"
+        ],
+        "requiredArguments": [
+            {
+                "type": "number",
+                "name": "value",
+                "default": null
+            }
+        ],
+        "optionalArguments": []
+    },
+    {
+        "functionName": "math.sin",
+        "description": "Returns the sine of the given angle (in radians).",
+        "returnValues": [
+            "number"
+        ],
+        "requiredArguments": [
+            {
+                "type": "number",
+                "name": "angle",
+                "default": null
+            }
+        ],
+        "optionalArguments": []
+    },
+    {
+        "functionName": "math.cos",
+        "description": "Returns the cosine of the given angle (in radians).",
+        "returnValues": [
+            "number"
+        ],
+        "requiredArguments": [
+            {
+                "type": "number",
+                "name": "angle",
+                "default": null
+            }
+        ],
+        "optionalArguments": []
+    },
+    {
+        "functionName": "math.tan",
+        "description": "Returns the tangent of the given angle (in radians).",
+        "returnValues": [
+            "number"
+        ],
+        "requiredArguments": [
+            {
+                "type": "number",
+                "name": "angle",
+                "default": null
+            }
+        ],
+        "optionalArguments": []
+    },
+    {
+        "functionName": "coroutine.create",
+        "description": "This function creates a new coroutine with a given function.",
+        "returnValues": [
+            "thread"
+        ],
+        "requiredArguments": [
+            {
+                "type": "function",
+                "name": "function",
+                "default": null
+            }
+        ],
+        "optionalArguments": []
+    },
+    {
+        "functionName": "coroutine.resume",
+        "description": "This function resumes execution of a suspended coroutine.",
+        "returnValues": [
+            "bool",
+            "any"
+        ],
+        "requiredArguments": [
+            {
+                "type": "thread",
+                "name": "coroutine",
+                "default": null
+            }
+        ],
+        "optionalArguments": [
+            {
+                "type": "any",
+                "name": "arguments",
+                "default": null
+            }
+        ]
+    },
+    {
+        "functionName": "coroutine.running",
+        "description": "This function returns the currently running coroutine and a boolean indicating whether it is the main coroutine.",
+        "returnValues": [
+            "thread",
+            "bool"
+        ],
+        "requiredArguments": [],
+        "optionalArguments": []
+    },
+    {
+        "functionName": "coroutine.status",
+        "description": "This function returns the status of the specified coroutine.",
+        "returnValues": [
+            "string"
+        ],
+        "requiredArguments": [
+            {
+                "type": "thread",
+                "name": "coroutine",
+                "default": null
+            }
+        ],
+        "optionalArguments": []
+    },
+    {
+        "functionName": "coroutine.wrap",
+        "description": "This function creates a coroutine and returns a function that resumes the coroutine each time it is called.",
+        "returnValues": [
+            "function"
+        ],
+        "requiredArguments": [
+            {
+                "type": "function",
+                "name": "function",
+                "default": null
+            }
+        ],
+        "optionalArguments": []
+    },
+    {
+        "functionName": "coroutine.yield",
+        "description": "This function suspends the execution of the calling coroutine.",
+        "returnValues": [
+            "any"
+        ],
+        "requiredArguments": [],
+        "optionalArguments": [
+            {
+                "type": "any",
+                "name": "arguments",
+                "default": null
+            }
+        ]
+    },
+    {
+        "functionName": "debug.debug",
+        "description": "Enters an interactive mode with the user, running in a Lua thread. The user can inspect global and local variables, modify them, and execute Lua code. Useful for debugging.",
+        "returnValues": [],
+        "requiredArguments": [],
+        "optionalArguments": []
+    },
+    {
+        "functionName": "debug.gethook",
+        "description": "Returns the current hook settings of a coroutine. It provides the hook function and the mask, as well as the count of instructions.",
+        "returnValues": [
+            "function",
+            "string",
+            "number"
+        ],
+        "requiredArguments": [
+            {
+                "type": "thread",
+                "name": "coroutine",
+                "default": "coroutine.running()"
+            }
+        ],
+        "optionalArguments": []
+    },
+    {
+        "functionName": "debug.getinfo",
+        "description": "Returns a table with debugging information about a function or active function call, such as the source, line number, and name.",
+        "returnValues": [
+            "table"
+        ],
+        "requiredArguments": [
+            {
+                "type": "function|string|number",
+                "name": "threadOrFunction",
+                "default": null
+            }
+        ],
+        "optionalArguments": [
+            {
+                "type": "string",
+                "name": "options",
+                "default": "f"
+            }
+        ]
+    },
+    {
+        "functionName": "debug.getlocal",
+        "description": "Returns the name and value of a local variable from a given function and variable index.",
+        "returnValues": [
+            "string",
+            "any"
+        ],
+        "requiredArguments": [
+            {
+                "type": "thread|number",
+                "name": "functionOrLevel",
+                "default": null
+            },
+            {
+                "type": "number",
+                "name": "localIndex",
+                "default": null
+            }
+        ],
+        "optionalArguments": []
+    },
+    {
+        "functionName": "debug.getmetatable",
+        "description": "Returns the metatable of a given table if it exists, or `nil` otherwise.",
+        "returnValues": [
+            "table"
+        ],
+        "requiredArguments": [
+            {
+                "type": "table",
+                "name": "object",
+                "default": null
+            }
+        ],
+        "optionalArguments": []
+    },
+    {
+        "functionName": "debug.getregistry",
+        "description": "Returns the registry table, a special table that holds global references in Lua.",
+        "returnValues": [
+            "table"
+        ],
+        "requiredArguments": [],
+        "optionalArguments": []
+    },
+    {
+        "functionName": "debug.getupvalue",
+        "description": "Returns the name and value of the upvalue with the given index for the specified function.",
+        "returnValues": [
+            "string",
+            "any"
+        ],
+        "requiredArguments": [
+            {
+                "type": "function",
+                "name": "function",
+                "default": null
+            },
+            {
+                "type": "number",
+                "name": "upvalueIndex",
+                "default": null
+            }
+        ],
+        "optionalArguments": []
+    },
+    {
+        "functionName": "debug.sethook",
+        "description": "Sets a hook function to monitor events for a given thread, such as calls, returns, and line executions.",
+        "returnValues": [],
+        "requiredArguments": [
+            {
+                "type": "function",
+                "name": "hook",
+                "default": null
+            },
+            {
+                "type": "string",
+                "name": "mask",
+                "default": null
+            }
+        ],
+        "optionalArguments": [
+            {
+                "type": "number",
+                "name": "count",
+                "default": null
+            }
+        ]
+    },
+    {
+        "functionName": "debug.setlocal",
+        "description": "Assigns a value to a local variable at a specified index for a given function call.",
+        "returnValues": [
+            "string"
+        ],
+        "requiredArguments": [
+            {
+                "type": "number|thread",
+                "name": "functionOrLevel",
+                "default": null
+            },
+            {
+                "type": "number",
+                "name": "localIndex",
+                "default": null
+            },
+            {
+                "type": "any",
+                "name": "value",
+                "default": null
+            }
+        ],
+        "optionalArguments": []
+    },
+    {
+        "functionName": "debug.setmetatable",
+        "description": "Sets a metatable for a given table. Returns the table.",
+        "returnValues": [
+            "table"
+        ],
+        "requiredArguments": [
+            {
+                "type": "table",
+                "name": "object",
+                "default": null
+            },
+            {
+                "type": "table|nil",
+                "name": "metatable",
+                "default": null
+            }
+        ],
+        "optionalArguments": []
+    },
+    {
+        "functionName": "debug.setupvalue",
+        "description": "Sets the value of an upvalue for a given function and upvalue index.",
+        "returnValues": [
+            "string"
+        ],
+        "requiredArguments": [
+            {
+                "type": "function",
+                "name": "function",
+                "default": null
+            },
+            {
+                "type": "number",
+                "name": "upvalueIndex",
+                "default": null
+            },
+            {
+                "type": "any",
+                "name": "value",
+                "default": null
+            }
+        ],
+        "optionalArguments": []
+    },
+    {
+        "functionName": "debug.traceback",
+        "description": "Returns a string with the traceback of the call stack. Useful for error handling and debugging.",
+        "returnValues": [
+            "string"
+        ],
+        "requiredArguments": [],
+        "optionalArguments": [
+            {
+                "type": "thread",
+                "name": "thread",
+                "default": "coroutine.running()"
+            },
+            {
+                "type": "string",
+                "name": "message",
+                "default": ""
+            },
+            {
+                "type": "number",
+                "name": "level",
+                "default": "1"
+            }
+        ]
+    },
+    {
+        "functionName": "error",
+        "description": "Raises an error with an optional message.",
+        "returnValues": [],
+        "requiredArguments": [
+            {
+                "type": "string",
+                "name": "message",
+                "default": null
+            }
+        ],
+        "optionalArguments": [
+            {
+                "type": "number",
+                "name": "level",
+                "default": "1"
+            }
+        ]
     }
 ];

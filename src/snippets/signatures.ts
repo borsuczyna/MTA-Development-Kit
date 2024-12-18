@@ -38,7 +38,7 @@ export class SignatureHelpProvider implements vscode.SignatureHelpProvider {
 
         // Extract function name from the text before the cursor
         const textBeforeCursor = lineText.substring(0, position.character);
-        const functionCallMatch = /\w+\s*\(/.exec(textBeforeCursor);
+        const functionCallMatch = /[\w\.]+\s*\(/.exec(textBeforeCursor);
         if (!functionCallMatch) {
             return null;
         }

@@ -37,13 +37,12 @@ function activate(context: vscode.ExtensionContext) {
 
     const refresh = async () => {
         resourceTreeProvider.refresh();
-        
+        await ResourceTreeProvider.loadResources();
+
         const document = vscode.window.activeTextEditor?.document;
         if (document) {
             SnippetCompletionItemProvider.onActiveFileChange(document);
         }
-
-        await ResourceTreeProvider.loadResources();
     };
 
     // Watch for changes in the workspace
