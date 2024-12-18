@@ -24,7 +24,15 @@ export class Resource {
     }
 
     public async load() {
+        this.scripts = [];
+        this.exports = [];
+
         await this.loadMeta();
+    }
+
+    public async refresh() {
+        console.log('Refreshing resource', this.name);
+        await this.load();
     }
 
     public toResourceItem(): ResourceItem {
@@ -234,5 +242,23 @@ export class Resource {
     public static getResourceByName(name: string): Resource | null {
         const resources = ResourceTreeProvider.getResourcesCached();
         return resources.find(resource => resource.name === name) || null;
+    }
+
+    public static getResourceByUri(uri: vscode.Uri): Resource | null {
+        const resources = ResourceTreeProvider.getResourcesCached();
+        
+        for (const resource of resources) {
+            if (pathCompare(resource.fullPath, uri.fsPath)) {
+                return resource;
+            }
+
+            for (const script of resource.scripts) {
+                if (pathCompare(script.fullPath, uri.fsPath)) {
+                    return resource;
+                }
+            }
+        }
+
+        return null;
     }
 }

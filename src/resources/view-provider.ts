@@ -45,7 +45,7 @@ export class ResourceTreeProvider {
 		return element.children || [];
 	}
 
-	private static async loadResources() {
+	public static async loadResources() {
 		this._resources = await Resource.getResources();
 	}
 

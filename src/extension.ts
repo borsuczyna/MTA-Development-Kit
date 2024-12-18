@@ -5,6 +5,7 @@ import { SnippetCompletionItemProvider } from './snippets/snippets';
 import { SignatureHelpProvider } from './snippets/signatures';
 import { FunctionDefinitionProvider } from './definitions/function';
 import { ErrorLens } from './error-lens/error-lens';
+import { Resource } from './resources/resource';
 
 function activate(context: vscode.ExtensionContext) {
     // Resource export commands
@@ -31,21 +32,31 @@ function activate(context: vscode.ExtensionContext) {
     // Error lens
     context.subscriptions.push(ErrorLens.activate());
 
-    // Document change
-    context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((event) => SnippetCompletionItemProvider.onActiveFileChange(event.document)));
-
-    // On file open
-    vscode.workspace.textDocuments.forEach((document) => SnippetCompletionItemProvider.onActiveFileChange(document));
-
-
     const resourceTreeProvider = new ResourceTreeProvider();
     vscode.window.registerTreeDataProvider('exportsView', resourceTreeProvider);
 
+    const refresh = async () => {
+        resourceTreeProvider.refresh();
+        
+        const document = vscode.window.activeTextEditor?.document;
+        if (document) {
+            SnippetCompletionItemProvider.onActiveFileChange(document);
+        }
+
+        await ResourceTreeProvider.loadResources();
+    };
+
     // Watch for changes in the workspace
     const watcher = vscode.workspace.createFileSystemWatcher('**/*', false, false, false);
-    watcher.onDidCreate(() => resourceTreeProvider.refresh());
-    watcher.onDidDelete(() => resourceTreeProvider.refresh());
-    watcher.onDidChange(() => resourceTreeProvider.refresh());
+    watcher.onDidCreate(refresh);
+    watcher.onDidDelete(refresh);
+    watcher.onDidChange(refresh);
+    
+    // Document change
+    context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(refresh));
+
+    // On file open
+    refresh();
 }
 
 function deactivate() {}
