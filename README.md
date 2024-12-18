@@ -26,7 +26,7 @@ This extension provides tools for developing MTA:SA scripts in Visual Studio Cod
 ![MTA Development Kit](https://i.imgur.com/PtcHPyq.png)
 
 - Type warnings, for example when using wrong type in function<br />
-![MTA Development Kit](https://i.imgur.com/jxgk2ky.png)
+![MTA Development Kit](https://i.imgur.com/6ShB8es.png)
 
 ## Roadmap
 
