@@ -41,8 +41,8 @@ This extension provides tools for developing MTA:SA scripts in Visual Studio Cod
 - [ ] Ctrl + click on variable to go to its definition
 - [ ] Reading function definition data from comments above the function, e.g. `-- @param name: string`
 - [x] Error lens
-- [ ] Errors for calling unknown function
-- [ ] Errors for using unknown variable
+- [x] Warning for calling unknown function
+- [ ] Warning for using unknown variable
 - [x] Warning for incorrect argument count
 - [ ] Warnings (for example when source is used as player in trigger)
 - [ ] Trigger snippets
